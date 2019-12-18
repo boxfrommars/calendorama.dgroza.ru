@@ -1,0 +1,279 @@
+/* CSS Reset by Eric Meyer */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-weight: inherit;
+	font-style: inherit;
+	font-size: 100%;
+	font-family: inherit;
+	vertical-align: baseline;
+}
+/* remember to define focus styles! */
+:focus {
+	outline: 0;
+}
+body {
+	line-height: 1;
+	color: black;
+	background: white;
+}
+ol, ul {
+	list-style: none;
+}
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+caption, th, td {
+	text-align: left;
+	font-weight: normal;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: "";
+}
+blockquote, q {
+	quotes: "" "";
+}
+/*------------------------------------------------------------*/
+html {
+	width: 100%;
+	background:#333;
+}
+body {
+	font-size:62.5%;
+	background:#333;
+	color:#333;
+	padding: 10px 0;
+	font-family:Arial, Helvetica, sans-serif;
+	width: 100%;
+}
+#wrap {
+	overflow:hidden;
+	width:708px;
+	background:#efefef;
+	margin:0 auto;
+	padding:40px 100px 10px;
+	font-size:1.2em;
+	position:relative;
+}
+a {
+	color:#5AB300;
+}
+a:hover{
+	color:#777;
+}
+h1 {
+	font-size:2em;
+	margin-bottom:.4em;
+	font-weight:normal;
+}
+h3 {
+	padding-bottom:10px;
+	font-weight:bold;
+	font-size:16px;
+	letter-spacing:-1px;
+}
+/*calendar*/
+#calendar {
+	margin:0 auto;
+	background:#999;
+	border-spacing: 1px;
+}
+#calendar tr {
+	height:75px;
+	overflow:hidden;
+}
+#calendar td {
+	width:100px;
+	height:75px;
+	vertical-align:middle;
+	background:#eaeaea;
+	text-align:center;
+	overflow:hidden;
+	font-family:Georgia, serif;
+}
+#calendar td.w-p {
+	vertical-align:top;
+	text-align:right;
+	color:#999;	
+}
+#calendar td.w-p span {
+	padding:5px;
+	display:block;
+}
+#calendar .a-m-d {
+	background:#dfdfdf;
+}
+.view_full {
+	display:block;
+	width:90px;
+	height:70px;
+	margin:0 auto;
+	overflow:hidden;
+}
+.view_full:hover,
+.view_full:focus {
+	border:2px solid #5AB300;
+}
+/*tooltip*/
+#tooltip {
+	z-index:2;
+	border:1px solid #ccc;
+	padding:5px;
+	background:#F7F5D1;
+	position:absolute;
+	font-size:12px;
+}
+/*post view*/
+#post-view {
+	padding:10px;
+	background:#eaeaea;
+	position:absolute;
+	left:150px;
+	left:130px;
+	top:50px;
+	border:1px solid #ccc;
+	display:block;
+}
+/*footer*/
+#month {
+	font-size:3.5em;
+	text-transform:uppercase;
+	padding-top:10px;
+	letter-spacing:-3px;
+	float:left;
+	font-weight:400;
+}
+#month-nav {
+	letter-spacing:0;
+}
+#month-nav a {
+	text-decoration:none;
+}
+#footer {
+	padding-top:10px;
+	text-align:right;
+	float:right;
+	line-height:1.2em;
+}
+#info-block {
+	position:absolute;
+	font-size:1.3em;
+	padding:4px 4px 4px 40px;
+	height:32px;
+	line-height:32px;
+	color:#333;
+	left:0;
+	top:0;
+}
+/*"loading" block*/
+.loading {
+	background:transparent url(wait.gif) no-repeat 0;
+}
+#nopost {
+	position:absolute;
+	left:40%;
+	top:250px;
+	padding:10px;
+	background:#efefef;
+	border:1px solid #ccc;
+	width:18%;
+}
+.faded {
+	display:none;
+}
+#navigate {
+	position:absolute;
+	right:100px;
+	top:48px;
+	font-weight:bold;
+}
+#navigate li {
+	display:inline;
+	padding:0 0 0 10px;
+}
+
+
+/* pseudoblocks */
+
+.pseudoblock {
+	position:absolute;
+	right:40px;
+	bottom:40px;
+	padding:10px;
+	background:#efefef;
+	border:1px solid #ccc;
+	width:170px;
+}
+.pseudoblock p {
+	margin-bottom:.8em;
+	line-height:15px;
+}
+/*authors block*/
+#authorsblock {
+	width:672px;
+	bottom:30px;
+}
+#authorsblock dd,
+#authorsblock dt {
+	float:left;
+	width:100px;
+	padding-bottom:10px;
+	overflow: hidden;
+}
+#authorsblock dt {
+	font-weight:bold;
+	clear: left;
+}
+#authorsblock dd {
+	width:100px;
+	padding-left:10px;
+}
+#authorsblock dl {
+	width:210px;
+	float:left;
+	border: 1px solid #ccc;
+	border-width: 0 1px 0 0;
+	padding-right:10px;
+}
+#commentsblock {
+	width:260px;
+}
+#commentsblock .author {
+	font-weight:bold;
+}
+#commentsblock .date {
+	font-style:italic;
+}
+#commentsblock p {
+	margin-top:4px;
+}
+#rss {
+	color:#DFA137;
+}
+#authorsblock .bordered {
+	border-width: 0;
+	padding-left:10px;
+	padding-right:0;
+}
+.center {
+	padding-left:10px;
+}
+#montheslistblock {
+	width: 110px;
+	line-height: 1.6;
+	bottom: auto;
+	top: 80px;
+	color: #aaa;
+}
