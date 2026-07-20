@@ -32,6 +32,21 @@ function assert_contains(string $needle, string $haystack, string $message): voi
     assert_true(str_contains($haystack, $needle), $message . ': ' . $needle);
 }
 
+test('index loads the standalone client module', static function (): void {
+    ob_start();
+    require dirname(__DIR__) . '/index.php';
+    $html = ob_get_clean();
+
+    assert_contains('<!doctype html>', strtolower($html), 'HTML5 doctype missing');
+    assert_contains('<script type="module" src="/script.js?i=2"></script>', $html, 'Client module missing');
+    assert_contains('<template id="montheslist-template">', $html, 'Month list template missing');
+    assert_contains('<template id="authors-template">', $html, 'Authors template missing');
+    assert_contains('<template id="about-template">', $html, 'About template missing');
+    assert_true(!str_contains($html, 'jquery'), 'jQuery is still referenced');
+    assert_true(!str_contains($html, 'history.js'), 'Legacy history script is still referenced');
+    assert_true(!str_contains($html, 'options.js'), 'Legacy options script is still referenced');
+});
+
 test('request parser accepts valid strings and integers', static function (): void {
     assert_true(parse_calendar_request(['month' => '3', 'year' => '2010']) === [3, 2010], 'String input failed');
     assert_true(parse_calendar_request(['month' => 12, 'year' => 9999]) === [12, 9999], 'Integer input failed');

@@ -1,210 +1,245 @@
-// TO DO: может всё таки вынести авторов и о проекте в хтмл
-(function(){
-	var calendarDate = false;
-	var tooltip = function(tooltip){
-		$(tooltip).hover(function(e){
-			this.tt = this.title;
-			this.title = '';
-			this.t = $(this).children('img').attr('alt');
-			$(this).children('img').attr('alt','');
-			$("body").append("<p id='tooltip'>"+ this.tt +"</p>");
-			$("#tooltip")
-				.css("top",(e.pageY + 20) + "px")
-				.css("left",(e.pageX + 20) + "px")
-				.fadeIn("slow");
-	    },
-		function(){
-			$(this).children('img').attr('alt',this.t);
-			this.title = this.tt;
-			$("#tooltip").remove();
-	    });	
-		$(tooltip).mousemove(function(e){
-			$("#tooltip")
-				.css("top",(e.pageY + 20) + "px")
-				.css("left",(e.pageX + 20) + "px");
-		});
-	};
-	// tooltip plugin written by Alen Grakalic (http://cssglobe.com) and modified for image and ajax-loaded tooltips by Dmitry Groza (http://dgroza.ru)
-	jQuery.fn.fadeAppend = function(e){
-		var parent = this;
-		var opt = {
-			selector: '.pseudoblock'
-		}
-		if ($(opt.selector).length < 1){
-			var blockId = '#';
-			blockId += $(e)
-				.appendTo(parent)
-				.attr('id');
-			$(blockId).fadeIn();
-		} else {
-			$(opt.selector).fadeRemove(function(){
-				$(parent).fadeAppend(e);
-			})
-		}
-	}
-	jQuery.fn.fadeRemove = function(fnct){
-		var t = this;
-		$(this).fadeOut(400,function(){
-			$(t).remove();
-			if (fnct){
-				fnct();
-			}
-		});
-	}
-	// fadeAppend & fadeRemove plugin written by Dmitry Groza (http://dgroza.ru)
+const INFO = {
+    loading: 'Loading…',
+    ajaxError: 'Сожалею, но, похоже, ошибка :–(',
+    noImage: 'Странно, но большое изображение загрузить не удаётся :–(',
+};
 
-	Date.prototype.getMonthOne = function(){
-		return this.getMonth() + 1;
-	}
-	Date.prototype.plain = function(type){
-		if (type == 'month'){
-			return this.getFullYear() + '_' + (this.getMonthOne());
-		}
-		if (type == 'day'){
-			return this.getFullYear() + '_' + (this.getMonth() + 1) + '_' + this.getDate();
-		}
-	}
-	Date.prototype.isViewFull = false;
-	Date.prototype.setPlain = function(plain){
-		var plainDateArr = plain.split('_');
-		this.isViewFull = plainDateArr[2] ? true : false;
-		this.setFullYear(plainDateArr[0], plainDateArr[1] - 1, this.isViewFull ? plainDateArr[2] : 1);
-	}
-	var clean = function(){
-		$('.cleanable').fadeRemove();
-		$('#tooltip').remove(); 
-	}
-	var showInfo = function(text){
-		hideInfo();
-		$('#wrap').append('<div id="info-block" class="loading cleanable">' + text +'</div>');
-	}
-	var hideInfo = function(){
-		$('#info-block').remove();
-	}
-	var showViewFull = function(){
-		$('#post-view').css({'height':'auto','width':'auto','display':'none','overflow':'visible','padding':''});
-		$('#post-view img').unbind('load');
-		hideInfo();
-		$('#post-view').fadeIn();
-	}
-	var viewFull = function(href){
-			showInfo(options.info.loading);
-			imgComplete = true;
-			if ($('#post-view').length < 1){
-				var block = '<div id="post-view" class="cl cleanable faded postview"></div>';
-				$('#wrap').append(block);
-				$('#post-view').css({'height':'1px','width':'1px','overflow':'hidden','padding':'0'});
-				
-				var fImg = new Image();
-				$('#post-view').append(fImg);
-				fImg.src = href;
-				
-				if (fImg.complete){
-					imgComplete = false;
-					showViewFull();
-				}
-				$(fImg).load(function(){	// to do: do it if no error
-					if (imgComplete) showViewFull();
-				});
-				$(fImg).error(function(){
-					showInfo(options.info.noImage);
-				});
-			} else {
-				$('#post-view').fadeRemove(function(){
-					viewFull(href);
-				});
-			}
-	}
-	var appendCalendar = function(data){
-		clean();
-		$('#month-wrap').html(data);
-		tooltip('a.tooltip');
-		$('#calendar').hide();
-		$('#calendar').fadeIn(1000);
-	}
-	var loadCalendar = function(date){
-		var callback = arguments[1] ? arguments[1] : false;
-		$.ajax({
-			url : 'handler.php',
-			type : 'post',
-			timeout : 30000,
-			success : function(data){
-				hideInfo();
-				clean();
-				if ($('#calendar').length > 0) {
-					$('#calendar').animate({opacity:"0"}, 400, function(){
-						appendCalendar(data);
-					});
-				} else {
-					appendCalendar(data);
-				}
-				if (callback) callback();
-			},
-			beforeSend : showInfo(options.info.loading),
-			data : {
-				month : date.getMonthOne(),
-				year : date.getFullYear()
-			},
-			error : function(){
-				hideInfo();
-				showInfo(options.info.ajaxError);
-			}
-		});
-	}
-	$(document).ready(function(){
-		tooltip('a.permtooltip');	// binds static tooltips
-		
-		var historyCallback = function(hash){
-			if (!calendarDate) {
-				calendarDate = new Date();
-				var isFirstCalendarLoading = true;
-			}
-			hash = hash ? hash : 'd' + (new Date()).plain('month');
-			if (hash.substr(0,1) == 'd'){
-				hash = hash.substr(1);
-				
-				var hashDate = new Date();
-				hashDate.setPlain(hash);
-				
-				var isMonthChanged = (isFirstCalendarLoading || ((calendarDate.getMonthOne()) != hashDate.getMonthOne()));
-				calendarDate.setPlain(hash);
-				
-				if (calendarDate.isViewFull){
-					var fullImageSrc = '/blog/' + calendarDate.getMonthOne() + '_' + calendarDate.getDate() + '_full.jpg';
-					if (isMonthChanged){
-						loadCalendar(calendarDate, function(){
-							viewFull(fullImageSrc);
-						});
-					} else {
-						viewFull(fullImageSrc);
-					}
-				} else {
-					if (isMonthChanged){
-						loadCalendar(calendarDate);
-					} else {
-						clean();
-					}
-				}
-			}
-		}
-		$.history.init(historyCallback);
-		
-		$('.pseudo').click(function(){
-			var blockId = $(this).attr('id') + 'block';
-			$('#wrap').fadeAppend(options.pseudoblocks[blockId]);
-			tooltip('a.pseudotooltip');
-			return false;
-		});
-		
-		$(".cl").live('click',function(){
-			$(this).fadeRemove();
-			if ($(this).hasClass('postview')){
-				$.history.load('d' + calendarDate.plain('month'));
-			}
-		});
-		$('.goto').live('click', function(){	// navigate
-			$.history.load('d' + $(this).attr('id').substr(1));
-			return false;
-		});
-	});
-})();
+const FADE_DURATION = 400;
+const CALENDAR_FADE_DURATION = 1000;
+const REQUEST_TIMEOUT = 30000;
+
+const wrap = document.querySelector('#wrap');
+const monthWrap = document.querySelector('#month-wrap');
+
+let calendarDate = null;
+let activeRequest = null;
+let routeVersion = 0;
+let tooltipTarget = null;
+
+function parseHash(hash) {
+    const match = hash.replace(/^#/, '').match(/^d([0-9]{1,4})_([0-9]{1,2})(?:_([0-9]{1,2}))?$/);
+    if (!match) return null;
+
+    const date = {year: Number(match[1]), month: Number(match[2]), day: match[3] ? Number(match[3]) : null};
+    if (date.year < 1 || date.year > 9999 || date.month < 1 || date.month > 12) return null;
+    if (date.day !== null && (date.day < 1 || date.day > 31)) return null;
+    return date;
+}
+
+function currentMonth() {
+    const now = new Date();
+    return {year: now.getFullYear(), month: now.getMonth() + 1, day: null};
+}
+
+function formatMonthHash(date) { return `d${date.year}_${date.month}`; }
+function formatDayHash(date) { return `d${date.year}_${date.month}_${date.day}`; }
+function sameMonth(left, right) { return left !== null && left.year === right.year && left.month === right.month; }
+
+function animate(element, keyframes, duration) {
+    return element.animate(keyframes, {duration, easing: 'linear'}).finished.catch(() => undefined);
+}
+
+async function fadeIn(element, duration = FADE_DURATION) {
+    element.style.display = 'block';
+    await animate(element, [{opacity: 0}, {opacity: 1}], duration);
+    element.style.opacity = '1';
+}
+
+async function fadeOutAndRemove(element, callback = null) {
+    if (!element?.isConnected) {
+        callback?.();
+        return;
+    }
+    await animate(element, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
+    element.remove();
+    callback?.();
+}
+
+function removeTooltip() {
+    document.querySelector('#tooltip')?.remove();
+    tooltipTarget = null;
+}
+
+function clean() {
+    document.querySelectorAll('.cleanable').forEach((element) => fadeOutAndRemove(element));
+    removeTooltip();
+}
+
+function hideInfo() { document.querySelector('#info-block')?.remove(); }
+
+function showInfo(text) {
+    hideInfo();
+    const info = document.createElement('div');
+    info.id = 'info-block';
+    info.className = 'loading cleanable';
+    info.textContent = text;
+    wrap.append(info);
+}
+
+async function appendCalendar(html, request) {
+    const previous = monthWrap.querySelector('#calendar');
+    if (previous) await animate(previous, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
+    if (activeRequest !== request || request.signal.aborted) return false;
+
+    hideInfo();
+    clean();
+    monthWrap.innerHTML = html;
+    const calendar = monthWrap.querySelector('#calendar');
+    if (calendar) await fadeIn(calendar, CALENDAR_FADE_DURATION);
+    return true;
+}
+
+async function loadCalendar(date) {
+    activeRequest?.abort();
+    const request = new AbortController();
+    activeRequest = request;
+    const timeout = window.setTimeout(() => request.abort(), REQUEST_TIMEOUT);
+    showInfo(INFO.loading);
+
+    try {
+        const response = await fetch('/handler.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            body: new URLSearchParams({month: String(date.month), year: String(date.year)}),
+            signal: request.signal,
+        });
+        if (!response.ok) throw new Error(`Calendar request failed with HTTP ${response.status}`);
+        return await appendCalendar(await response.text(), request);
+    } catch (error) {
+        if (error.name !== 'AbortError' || activeRequest === request) {
+            hideInfo();
+            showInfo(INFO.ajaxError);
+        }
+        return false;
+    } finally {
+        window.clearTimeout(timeout);
+        if (activeRequest === request) activeRequest = null;
+    }
+}
+
+function showFullImage(postView) {
+    postView.style.height = 'auto';
+    postView.style.width = 'auto';
+    postView.style.overflow = 'visible';
+    postView.style.padding = '';
+    hideInfo();
+    fadeIn(postView);
+}
+
+async function viewFull(source, version) {
+    showInfo(INFO.loading);
+    const previous = document.querySelector('#post-view');
+    if (previous) await fadeOutAndRemove(previous);
+    if (version !== routeVersion) return;
+
+    const postView = document.createElement('div');
+    postView.id = 'post-view';
+    postView.className = 'cl cleanable faded postview';
+    Object.assign(postView.style, {height: '1px', width: '1px', overflow: 'hidden', padding: '0'});
+    const image = new Image();
+    postView.append(image);
+    wrap.append(postView);
+
+    let handled = false;
+    const show = () => {
+        if (!handled) {
+            handled = true;
+            version === routeVersion ? showFullImage(postView) : postView.remove();
+        }
+    };
+    const fail = () => {
+        if (!handled) {
+            handled = true;
+            if (version === routeVersion) showInfo(INFO.noImage);
+            else postView.remove();
+        }
+    };
+    image.addEventListener('load', show, {once: true});
+    image.addEventListener('error', fail, {once: true});
+    image.src = source;
+    if (image.complete) image.naturalWidth > 0 ? show() : fail();
+}
+
+async function handleHash() {
+    const version = ++routeVersion;
+    const date = window.location.hash ? parseHash(window.location.hash) : currentMonth();
+    if (!date) return;
+
+    const monthChanged = !sameMonth(calendarDate, date);
+    calendarDate = date;
+    if (date.day !== null) {
+        if (monthChanged && !(await loadCalendar(date))) return;
+        if (version === routeVersion) await viewFull(`/blog/${date.month}_${date.day}_full.jpg`, version);
+    } else if (monthChanged) {
+        await loadCalendar(date);
+    } else {
+        clean();
+    }
+}
+
+async function openPseudoblock(id) {
+    const template = document.querySelector(`#${id}-template`);
+    if (!(template instanceof HTMLTemplateElement)) return;
+    const previous = document.querySelector('.pseudoblock');
+    if (previous) await fadeOutAndRemove(previous);
+    const block = template.content.firstElementChild.cloneNode(true);
+    wrap.append(block);
+    await fadeIn(block);
+}
+
+function tooltipAnchor(target) { return target.closest('a.tooltip, a.permtooltip, a.pseudotooltip'); }
+
+document.addEventListener('mouseover', (event) => {
+    const anchor = tooltipAnchor(event.target);
+    if (!anchor || anchor.contains(event.relatedTarget)) return;
+    tooltipTarget = anchor;
+    anchor.dataset.tooltipTitle = anchor.title;
+    anchor.title = '';
+    const image = anchor.querySelector('img');
+    if (image) { image.dataset.tooltipAlt = image.alt; image.alt = ''; }
+    const tooltip = document.createElement('p');
+    tooltip.id = 'tooltip';
+    tooltip.textContent = anchor.dataset.tooltipTitle;
+    document.body.append(tooltip);
+    fadeIn(tooltip);
+});
+
+document.addEventListener('mouseout', (event) => {
+    const anchor = tooltipAnchor(event.target);
+    if (!anchor || anchor.contains(event.relatedTarget)) return;
+    anchor.title = anchor.dataset.tooltipTitle ?? '';
+    const image = anchor.querySelector('img');
+    if (image) image.alt = image.dataset.tooltipAlt ?? '';
+    removeTooltip();
+});
+
+document.addEventListener('mousemove', (event) => {
+    const tooltip = document.querySelector('#tooltip');
+    if (!tooltip || !tooltipTarget) return;
+    tooltip.style.top = `${event.pageY + 20}px`;
+    tooltip.style.left = `${event.pageX + 20}px`;
+});
+
+document.addEventListener('click', (event) => {
+    const pseudo = event.target.closest('a.pseudo');
+    if (pseudo) {
+        event.preventDefault();
+        openPseudoblock(pseudo.id);
+        return;
+    }
+
+    const closable = event.target.closest('.cl');
+    if (closable) {
+        fadeOutAndRemove(closable);
+        if (closable.classList.contains('postview') && calendarDate) window.location.hash = formatMonthHash(calendarDate);
+    }
+
+    const goto = event.target.closest('a.goto');
+    if (!goto) return;
+    event.preventDefault();
+    const date = parseHash(`#d${goto.id.slice(1)}`);
+    if (date) window.location.hash = date.day === null ? formatMonthHash(date) : formatDayHash(date);
+});
+
+window.addEventListener('hashchange', handleHash);
+handleHash();
