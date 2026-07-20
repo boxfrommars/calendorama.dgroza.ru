@@ -11,10 +11,12 @@ const REQUEST_TIMEOUT = 30000;
 const wrap = document.querySelector('#wrap');
 const monthWrap = document.querySelector('#month-wrap');
 
-let calendarDate = null;
-let activeRequest = null;
-let routeVersion = 0;
-let tooltipTarget = null;
+const state = {
+    calendarDate: null,
+    activeRequest: null,
+    routeVersion: 0,
+    tooltipTarget: null,
+};
 
 function parseHash(hash) {
     const match = hash.replace(/^#/, '').match(/^d([0-9]{1,4})_([0-9]{1,2})(?:_([0-9]{1,2}))?$/);
@@ -57,7 +59,7 @@ async function fadeOutAndRemove(element, callback = null) {
 
 function removeTooltip() {
     document.querySelector('#tooltip')?.remove();
-    tooltipTarget = null;
+    state.tooltipTarget = null;
 }
 
 function clean() {
@@ -79,7 +81,7 @@ function showInfo(text) {
 async function appendCalendar(html, request) {
     const previous = monthWrap.querySelector('#calendar');
     if (previous) await animate(previous, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
-    if (activeRequest !== request || request.signal.aborted) return false;
+    if (state.activeRequest !== request || request.signal.aborted) return false;
 
     hideInfo();
     clean();
@@ -90,9 +92,9 @@ async function appendCalendar(html, request) {
 }
 
 async function loadCalendar(date) {
-    activeRequest?.abort();
+    state.activeRequest?.abort();
     const request = new AbortController();
-    activeRequest = request;
+    state.activeRequest = request;
     const timeout = window.setTimeout(() => request.abort(), REQUEST_TIMEOUT);
     showInfo(INFO.loading);
 
@@ -106,14 +108,14 @@ async function loadCalendar(date) {
         if (!response.ok) throw new Error(`Calendar request failed with HTTP ${response.status}`);
         return await appendCalendar(await response.text(), request);
     } catch (error) {
-        if (error.name !== 'AbortError' || activeRequest === request) {
+        if (error.name !== 'AbortError' || state.activeRequest === request) {
             hideInfo();
             showInfo(INFO.ajaxError);
         }
         return false;
     } finally {
         window.clearTimeout(timeout);
-        if (activeRequest === request) activeRequest = null;
+        if (state.activeRequest === request) state.activeRequest = null;
     }
 }
 
@@ -130,7 +132,7 @@ async function viewFull(source, version) {
     showInfo(INFO.loading);
     const previous = document.querySelector('#post-view');
     if (previous) await fadeOutAndRemove(previous);
-    if (version !== routeVersion) return;
+    if (version !== state.routeVersion) return;
 
     const postView = document.createElement('div');
     postView.id = 'post-view';
@@ -144,13 +146,13 @@ async function viewFull(source, version) {
     const show = () => {
         if (!handled) {
             handled = true;
-            version === routeVersion ? showFullImage(postView) : postView.remove();
+            version === state.routeVersion ? showFullImage(postView) : postView.remove();
         }
     };
     const fail = () => {
         if (!handled) {
             handled = true;
-            if (version === routeVersion) showInfo(INFO.noImage);
+            if (version === state.routeVersion) showInfo(INFO.noImage);
             else postView.remove();
         }
     };
@@ -161,15 +163,15 @@ async function viewFull(source, version) {
 }
 
 async function handleHash() {
-    const version = ++routeVersion;
+    const version = ++state.routeVersion;
     const date = window.location.hash ? parseHash(window.location.hash) : currentMonth();
     if (!date) return;
 
-    const monthChanged = !sameMonth(calendarDate, date);
-    calendarDate = date;
+    const monthChanged = !sameMonth(state.calendarDate, date);
+    state.calendarDate = date;
     if (date.day !== null) {
         if (monthChanged && !(await loadCalendar(date))) return;
-        if (version === routeVersion) await viewFull(`/blog/${date.month}_${date.day}_full.jpg`, version);
+        if (version === state.routeVersion) await viewFull(`/blog/${date.month}_${date.day}_full.jpg`, version);
     } else if (monthChanged) {
         await loadCalendar(date);
     } else {
@@ -192,7 +194,7 @@ function tooltipAnchor(target) { return target.closest('a.tooltip, a.permtooltip
 document.addEventListener('mouseover', (event) => {
     const anchor = tooltipAnchor(event.target);
     if (!anchor || anchor.contains(event.relatedTarget)) return;
-    tooltipTarget = anchor;
+    state.tooltipTarget = anchor;
     anchor.dataset.tooltipTitle = anchor.title;
     anchor.title = '';
     const image = anchor.querySelector('img');
@@ -215,7 +217,7 @@ document.addEventListener('mouseout', (event) => {
 
 document.addEventListener('mousemove', (event) => {
     const tooltip = document.querySelector('#tooltip');
-    if (!tooltip || !tooltipTarget) return;
+    if (!tooltip || !state.tooltipTarget) return;
     tooltip.style.top = `${event.pageY + 20}px`;
     tooltip.style.left = `${event.pageX + 20}px`;
 });
@@ -231,7 +233,9 @@ document.addEventListener('click', (event) => {
     const closable = event.target.closest('.cl');
     if (closable) {
         fadeOutAndRemove(closable);
-        if (closable.classList.contains('postview') && calendarDate) window.location.hash = formatMonthHash(calendarDate);
+        if (closable.classList.contains('postview') && state.calendarDate) {
+            window.location.hash = formatMonthHash(state.calendarDate);
+        }
     }
 
     const goto = event.target.closest('a.goto');

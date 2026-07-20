@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>calendorama!</title>
+	<link rel="stylesheet" href="/style.css?i=1" media="screen">
+	<link rel="shortcut icon" href="/favicon.ico">
+	<link rel="alternate" type="application/rss+xml" title="calendorama feed" href="/rss.xml">
+	<script type="module" src="/script.js?i=2"></script>
+</head>
+<body>
+<div id="wrap">
+<h1>calendorama!</h1>
+<ul id="navigate">
+	<li><a href="/rss.xml" class="permtooltip" title="подписаться на rss" id="rss">rss</a></li>
+	<li><a href="#authors" class="pseudo permtooltip" title="авторы картинок" id="authors">authors</a></li>
+	<li><a href="#montheslist" class="pseudo permtooltip" title="перейти к месяцу" id="montheslist">monthes</a></li>
+</ul>
+<div id="month-wrap"></div>
+<p id="footer">dmitry groza<br>nadja gimmer<br>in incredible <b><a href="#calendoramaproject" id="about" class="pseudo permtooltip" title="о проекте">calendorama project!</a></b></p>
+<!-- надя гиммер, вы прекрасны :–) -->
+</div>
+
+<?php require __DIR__ . '/pseudoblocks.php'; ?>
+</body>
+</html>
