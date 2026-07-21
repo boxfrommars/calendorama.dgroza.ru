@@ -11,7 +11,6 @@ final readonly class CalendarMonth
     public int $firstWeekday;
     public int $daysInMonth;
     public string $name;
-    public ?int $today;
     public int $previousMonth;
     public int $previousYear;
     public string $previousMonthName;
@@ -28,13 +27,10 @@ final readonly class CalendarMonth
         }
 
         $julianDay = gregoriantojd($month, 1, $year);
-        $firstWeekday = jddayofweek($julianDay);
+        $firstWeekday = (int) jddayofweek($julianDay);
         $this->firstWeekday = $firstWeekday === 0 ? 7 : $firstWeekday;
         $this->daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
         $this->name = jdmonthname($julianDay, CAL_MONTH_GREGORIAN_LONG);
-
-        $isCurrentMonth = $month === (int) date('n') && $year === (int) date('Y');
-        $this->today = $isCurrentMonth ? (int) date('j') : null;
 
         $this->previousMonth = $month > 1 ? $month - 1 : 12;
         $this->previousYear = $month > 1 ? $year : $year - 1;

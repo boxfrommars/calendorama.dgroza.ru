@@ -2,12 +2,8 @@
 
 declare(strict_types=1);
 
-use Calendorama\View\TemplateRenderer;
-
-header('Content-Type: text/html; charset=utf-8');
+use Calendorama\ApplicationFactory;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-$templates = new TemplateRenderer(dirname(__DIR__) . '/templates');
-
-echo $templates->render('index.html.twig');
+ApplicationFactory::create(dirname(__DIR__))->index()->send();

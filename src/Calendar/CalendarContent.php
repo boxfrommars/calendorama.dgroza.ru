@@ -15,28 +15,26 @@ final class CalendarContent
     ) {
     }
 
-    public function title(int $month, int $day): string
+    public function post(int $month, int $day): ?CalendarPost
+    {
+        if (!is_file($this->filePath($month, $day, 'thmb'))) {
+            return null;
+        }
+
+        return new CalendarPost(
+            $this->title($month, $day),
+            $this->imageUrl($month, $day, 'full'),
+            $this->imageUrl($month, $day, 'thmb'),
+        );
+    }
+
+    private function title(int $month, int $day): string
     {
         if (!array_key_exists($month, $this->titles)) {
             $this->titles[$month] = $this->loadTitles($month);
         }
 
         return $this->titles[$month][$day] ?? 'no subject';
-    }
-
-    public function hasPost(int $month, int $day): bool
-    {
-        return is_file($this->filePath($month, $day, 'thmb'));
-    }
-
-    public function thumbnailUrl(int $month, int $day): string
-    {
-        return $this->imageUrl($month, $day, 'thmb');
-    }
-
-    public function fullImageUrl(int $month, int $day): string
-    {
-        return $this->imageUrl($month, $day, 'full');
     }
 
     /** @return array<int, string> */

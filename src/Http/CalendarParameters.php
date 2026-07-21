@@ -6,7 +6,7 @@ namespace Calendorama\Http;
 
 use InvalidArgumentException;
 
-final readonly class CalendarRequest
+final readonly class CalendarParameters
 {
     private function __construct(
         public int $month,
@@ -14,27 +14,23 @@ final readonly class CalendarRequest
     ) {
     }
 
-    /**
-     * @param array<string, mixed> $request
-     */
-    public static function fromArray(array $request): self
+    /** @param array<string, mixed> $parameters */
+    public static function fromArray(array $parameters): self
     {
         return new self(
-            self::integer($request, 'month', 1, 12),
-            self::integer($request, 'year', 1, 9999),
+            self::integer($parameters, 'month', 1, 12),
+            self::integer($parameters, 'year', 1, 9999),
         );
     }
 
-    /**
-     * @param array<string, mixed> $request
-     */
-    private static function integer(array $request, string $key, int $minimum, int $maximum): int
+    /** @param array<string, mixed> $parameters */
+    private static function integer(array $parameters, string $key, int $minimum, int $maximum): int
     {
-        if (!array_key_exists($key, $request)) {
+        if (!array_key_exists($key, $parameters)) {
             throw new InvalidArgumentException('Missing calendar parameter: ' . $key);
         }
 
-        $value = $request[$key];
+        $value = $parameters[$key];
         if (is_int($value)) {
             $integer = $value;
         } elseif (is_string($value) && preg_match('/^[0-9]+$/D', $value) === 1) {
