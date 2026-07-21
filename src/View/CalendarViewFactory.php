@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Calendorama\View;
 
-use Calendorama\Calendar\CalendarContent;
+use Calendorama\Calendar\CalendarArchive;
 use Calendorama\Calendar\CalendarMonth;
 use Calendorama\View\Model\CalendarCellView;
 use Calendorama\View\Model\CalendarPostView;
@@ -18,7 +18,7 @@ final readonly class CalendarViewFactory
     private const WEEKS = 6;
 
     public function __construct(
-        private CalendarContent $content,
+        private CalendarArchive $archive,
         private ClockInterface $clock,
     ) {
     }
@@ -72,7 +72,7 @@ final readonly class CalendarViewFactory
         }
 
         $day = $cellNumber - $month->firstWeekday + 1;
-        $post = $this->content->post($month->month, $day);
+        $post = $this->archive->post($month->month, $day);
 
         $postView = $post === null ? null : new CalendarPostView(
             '#d' . $month->year . '_' . $month->month . '_' . $day,

@@ -3,3 +3,6 @@
 AGENTS.md
 *~
 vendor/
+node_modules/
+playwright-report/
+test-results/

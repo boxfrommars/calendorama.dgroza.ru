@@ -16,10 +16,43 @@ services:
     volumes:
       - .:/var/www/html:ro
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
 
   tests:
     build:
       context: .
       target: test
     command: ["composer", "check"]
+    profiles: ["test"]
+
+  smoke:
+    build:
+      context: .
+      target: test
+    command: ["php", "tests/http-smoke.php"]
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      CALENDORAMA_BASE_URL: http://web
+    profiles: ["test"]
+
+  e2e:
+    build:
+      context: .
+      target: browser-test
+    command: ["npm", "run", "test:e2e"]
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      PLAYWRIGHT_BASE_URL: http://web
+    init: true
+    ipc: host
+    volumes:
+      - ./tests/e2e:/app/tests/e2e
     profiles: ["test"]

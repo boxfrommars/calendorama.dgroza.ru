@@ -44,11 +44,6 @@ function parseHash(hash) {
     return date;
 }
 
-function currentMonth() {
-    const now = new Date();
-    return {year: now.getFullYear(), month: now.getMonth() + 1, day: null};
-}
-
 function formatMonthHash(date) { return `#d${date.year}_${date.month}`; }
 function formatDayHash(date) { return `#d${date.year}_${date.month}_${date.day}`; }
 function sameMonth(left, right) { return left !== null && left.year === right.year && left.month === right.month; }
@@ -275,7 +270,7 @@ async function viewFull(date, version) {
 
 async function handleHash() {
     const version = ++state.routeVersion;
-    const date = window.location.hash ? parseHash(window.location.hash) : currentMonth();
+    const date = parseHash(window.location.hash || elements.month.dataset.initialCalendarRoute || '');
     if (!date) return;
 
     const monthChanged = !sameMonth(state.calendarDate, date);

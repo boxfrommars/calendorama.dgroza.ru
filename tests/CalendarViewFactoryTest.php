@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Calendorama\Tests;
 
-use Calendorama\Calendar\CalendarContent;
+use Calendorama\Calendar\CalendarArchive;
 use Calendorama\Calendar\CalendarMonth;
 use Calendorama\View\CalendarViewFactory;
 use Calendorama\View\Model\CalendarCellView;
@@ -82,7 +82,7 @@ final class CalendarViewFactoryTest extends TestCase
         try {
             file_put_contents($directory . '/3.txt', "1 a\"b<c&d\n");
             touch($directory . '/3_1_thmb.jpg');
-            $factory = new CalendarViewFactory(new CalendarContent($directory), new MockClock('2026-07-21'));
+            $factory = new CalendarViewFactory(new CalendarArchive($directory), new MockClock('2026-07-21'));
             $html = self::templates()->render(
                 'calendar-fragment.html.twig',
                 ['calendar' => $factory->create(new CalendarMonth(3, 2010))],
@@ -101,7 +101,7 @@ final class CalendarViewFactoryTest extends TestCase
     private static function factory(string $now): CalendarViewFactory
     {
         return new CalendarViewFactory(
-            new CalendarContent(dirname(__DIR__) . '/public/blog'),
+            new CalendarArchive(dirname(__DIR__) . '/public/blog'),
             new MockClock($now),
         );
     }

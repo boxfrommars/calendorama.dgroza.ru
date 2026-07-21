@@ -38,8 +38,9 @@ final class ControllerTest extends TestCase
         self::assertCount(1, $crawler->filter('[data-region="status"][role="status"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="alert"][role="alert"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="tooltip"][role="tooltip"][hidden]'));
-        self::assertSame('/style.css?i=5', $crawler->filter('link[rel="stylesheet"]')->attr('href'));
-        self::assertSame('/script.js?i=7', $crawler->filter('script[type="module"]')->attr('src'));
+        self::assertMatchesRegularExpression('~^/style\.css\?v=[a-f0-9]{12}$~D', $crawler->filter('link[rel="stylesheet"]')->attr('href') ?? '');
+        self::assertMatchesRegularExpression('~^/script\.js\?v=[a-f0-9]{12}$~D', $crawler->filter('script[type="module"]')->attr('src') ?? '');
+        self::assertCount(1, $crawler->filter('[data-region="month"][data-initial-calendar-route="#d2026_7"]'));
         self::assertCount(1, $crawler->filter('script[src]'));
         self::assertStringNotContainsString('jquery', strtolower($html));
         self::assertStringNotContainsString('history.js', strtolower($html));
@@ -65,8 +66,8 @@ final class ControllerTest extends TestCase
         self::assertStringNotContainsString('montheslist', $crawler->html());
     }
 
-    #[DataProvider('currentYears')]
-    public function testIndexMonthRoutesUseInjectedCurrentYear(string $now, int $year): void
+    #[DataProvider('currentDates')]
+    public function testIndexUsesInjectedCurrentDate(string $now, int $year, int $month, int $days): void
     {
         $crawler = Html::crawler(self::content(self::application($now)->index()));
         $dialog = $crawler->filter('dialog[data-panel="months"]');
@@ -75,14 +76,16 @@ final class ControllerTest extends TestCase
         self::assertCount(12, $monthLinks);
         self::assertSame('/#d' . $year . '_1', $monthLinks->first()->attr('href'));
         self::assertSame('#d' . $year . '_12', $monthLinks->last()->attr('data-calendar-route'));
+        self::assertCount(1, $crawler->filter('[data-region="month"][data-initial-calendar-route="#d' . $year . '_' . $month . '"]'));
+        self::assertStringContainsString('total (53/' . $days . ')', $dialog->text('', true));
         self::assertStringNotContainsString('d2010_', $dialog->html());
     }
 
-    /** @return iterable<string, array{string, int}> */
-    public static function currentYears(): iterable
+    /** @return iterable<string, array{string, int, int, int}> */
+    public static function currentDates(): iterable
     {
-        yield 'last moment of 2026' => ['2026-12-31T23:59:59+00:00', 2026];
-        yield 'first moment of 2027' => ['2027-01-01T00:00:00+00:00', 2027];
+        yield 'last moment of 2027' => ['2027-12-31T23:59:59+00:00', 2027, 12, 365];
+        yield 'first moment of leap year' => ['2028-01-01T00:00:00+00:00', 2028, 1, 366];
     }
 
     public function testIndexVisibleTextIsUnchanged(): void

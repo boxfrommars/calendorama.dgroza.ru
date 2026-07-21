@@ -3,10 +3,10 @@
 <head>
 	<meta charset="utf-8">
 	<title>calendorama!</title>
-	<link rel="stylesheet" href="/style.css?i=5" media="screen">
+	<link rel="stylesheet" href="{{ view.styleUrl }}" media="screen">
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link rel="alternate" type="application/rss+xml" title="calendorama feed" href="/rss.xml">
-	<script type="module" src="/script.js?i=7"></script>
+	<script type="module" src="{{ view.scriptUrl }}"></script>
 </head>
 <body>
 <div class="site-shell">
@@ -21,7 +21,7 @@
 		</nav>
 	</header>
 	<main>
-		<div data-region="month" aria-busy="false"></div>
+		<div data-region="month" data-initial-calendar-route="{{ view.initialRoute }}" aria-busy="false"></div>
 		<p class="visually-hidden" data-region="calendar-announcement" aria-live="polite" aria-atomic="true"></p>
 		<p class="status-message loading" data-region="status" role="status" hidden></p>
 		<p class="status-message loading" data-region="alert" role="alert" hidden></p>
@@ -35,26 +35,11 @@
 
 	<dialog id="months-dialog" class="panel-dialog month-list-panel" data-panel="months" aria-labelledby="months-dialog-title" tabindex="-1">
 		<h2 id="months-dialog-title" class="visually-hidden">Месяцы</h2>
-		{% set months = [
-			{name: 'January', count: 5},
-			{name: 'February', count: 2},
-			{name: 'March', count: 27},
-			{name: 'April', count: 5},
-			{name: 'May', count: 2},
-			{name: 'June', count: 2},
-			{name: 'July', count: 1},
-			{name: 'August', count: 2},
-			{name: 'September', count: 1},
-			{name: 'October', count: 0},
-			{name: 'November', count: 2},
-			{name: 'December', count: 4},
-		] %}
 		<ul>
-		{% for month in months %}
-			{% set route = '#d' ~ currentYear ~ '_' ~ loop.index %}
-			<li><a href="/{{ route }}" data-calendar-route="{{ route }}" data-tooltip="{{ month.name }}">{{ month.name }}</a> ({{ month.count }})</li>
+		{% for month in view.months %}
+			<li><a href="{{ month.href }}" data-calendar-route="{{ month.route }}" data-tooltip="{{ month.name }}">{{ month.name }}</a> ({{ month.postCount }})</li>
 		{% endfor %}
-			<li>total (53/365)</li>
+			<li>total ({{ view.postCount }}/{{ view.daysInYear }})</li>
 		</ul>
 	</dialog>
 

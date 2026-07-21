@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Calendorama\Calendar;
 
-final class CalendarContent
+final class CalendarArchive
 {
     /** @var array<int, array<int, string>> */
     private array $titles = [];
+
+    private ?ArchiveSummary $summary = null;
 
     public function __construct(
         private readonly string $directory,
@@ -26,6 +28,38 @@ final class CalendarContent
             $this->imageUrl($month, $day, 'full'),
             $this->imageUrl($month, $day, 'thmb'),
         );
+    }
+
+    public function summary(): ArchiveSummary
+    {
+        if ($this->summary !== null) {
+            return $this->summary;
+        }
+
+        /** @var array<int, int> $counts */
+        $counts = array_fill(1, 12, 0);
+        $pattern = rtrim($this->directory, '/\\') . DIRECTORY_SEPARATOR . '*_thmb.jpg';
+
+        foreach (glob($pattern) ?: [] as $file) {
+            if (preg_match('/^([1-9]|1[0-2])_([1-9]|[12][0-9]|3[01])_thmb\.jpg$/D', basename($file), $match) !== 1) {
+                continue;
+            }
+
+            $month = (int) $match[1];
+            $day = (int) $match[2];
+            if ($day > cal_days_in_month(CAL_GREGORIAN, $month, 2000)) {
+                continue;
+            }
+
+            $counts[$month]++;
+        }
+
+        $months = [];
+        foreach ($counts as $month => $postCount) {
+            $months[] = new ArchiveMonth($month, $postCount);
+        }
+
+        return $this->summary = new ArchiveSummary($months, array_sum($counts));
     }
 
     private function title(int $month, int $day): string
