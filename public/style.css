@@ -6,7 +6,8 @@ del, dfn, em, font, img, ins, kbd, q, s, samp,
 small, strike, strong, sub, sup, tt, var,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td {
+table, caption, tbody, tfoot, thead, tr, th, td,
+header, nav, main, footer, dialog, button {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -17,10 +18,6 @@ table, caption, tbody, tfoot, thead, tr, th, td {
 	font-family: inherit;
 	vertical-align: baseline;
 }
-/* remember to define focus styles! */
-:focus {
-	outline: 0;
-}
 body {
 	line-height: 1;
 	color: black;
@@ -29,7 +26,6 @@ body {
 ol, ul {
 	list-style: none;
 }
-/* tables still need 'cellspacing="0"' in the markup */
 table {
 	border-collapse: separate;
 	border-spacing: 0;
@@ -45,6 +41,9 @@ q:before, q:after {
 blockquote, q {
 	quotes: "" "";
 }
+[hidden] {
+	display: none !important;
+}
 /*------------------------------------------------------------*/
 html {
 	width: 100%;
@@ -58,7 +57,7 @@ body {
 	font-family:Arial, Helvetica, sans-serif;
 	width: 100%;
 }
-#wrap {
+.site-shell {
 	overflow:hidden;
 	width:708px;
 	background:#efefef;
@@ -67,11 +66,32 @@ body {
 	font-size:1.2em;
 	position:relative;
 }
-a {
+a,
+.link-button {
 	color:#5AB300;
 }
-a:hover{
+a:hover,
+.link-button:hover {
 	color:#777;
+}
+.link-button {
+	appearance:none;
+	background:transparent;
+	border:0;
+	border-radius:0;
+	cursor:pointer;
+	font:inherit;
+	line-height:inherit;
+	margin:0;
+	padding:0;
+	text-align:inherit;
+	text-decoration:underline;
+	vertical-align:baseline;
+}
+a:focus-visible,
+button:focus-visible {
+	outline:2px solid #5AB300;
+	outline-offset:2px;
 }
 h1 {
 	font-size:2em;
@@ -85,16 +105,16 @@ h3 {
 	letter-spacing:-1px;
 }
 /*calendar*/
-#calendar {
+.calendar {
 	margin:0 auto;
 	background:#999;
-	border-spacing: 1px;
+	border-spacing:1px;
 }
-#calendar tr {
+.calendar tr {
 	height:75px;
 	overflow:hidden;
 }
-#calendar td {
+.calendar td {
 	width:100px;
 	height:75px;
 	vertical-align:middle;
@@ -103,16 +123,16 @@ h3 {
 	overflow:hidden;
 	font-family:Georgia, serif;
 }
-#calendar td.w-p {
+.calendar td.w-p {
 	vertical-align:top;
 	text-align:right;
-	color:#999;	
+	color:#999;
 }
-#calendar td.w-p span {
+.calendar td.w-p span {
 	padding:5px;
 	display:block;
 }
-#calendar .a-m-d {
+.calendar .a-m-d {
 	background:#dfdfdf;
 }
 .view_full {
@@ -127,7 +147,7 @@ h3 {
 	border:2px solid #5AB300;
 }
 /*tooltip*/
-#tooltip {
+.tooltip-box {
 	z-index:2;
 	border:1px solid #ccc;
 	padding:5px;
@@ -136,18 +156,21 @@ h3 {
 	font-size:12px;
 }
 /*post view*/
-#post-view {
+.post-view {
 	padding:10px;
 	background:#eaeaea;
 	position:absolute;
-	left:150px;
 	left:130px;
 	top:50px;
+	right:auto;
+	bottom:auto;
 	border:1px solid #ccc;
 	display:block;
+	margin:0;
+	color:inherit;
 }
 /*footer*/
-#month {
+.month-heading {
 	font-size:3.5em;
 	text-transform:uppercase;
 	padding-top:10px;
@@ -155,19 +178,19 @@ h3 {
 	float:left;
 	font-weight:400;
 }
-#month-nav {
+.month-nav {
 	letter-spacing:0;
 }
-#month-nav a {
+.month-nav a {
 	text-decoration:none;
 }
-#footer {
+.site-footer {
 	padding-top:10px;
 	text-align:right;
 	float:right;
 	line-height:1.2em;
 }
-#info-block {
+.status-message {
 	position:absolute;
 	font-size:1.3em;
 	padding:4px 4px 4px 40px;
@@ -177,103 +200,83 @@ h3 {
 	left:0;
 	top:0;
 }
-/*"loading" block*/
 .loading {
 	background:transparent url(wait.gif) no-repeat 0;
 }
-#nopost {
-	position:absolute;
-	left:40%;
-	top:250px;
-	padding:10px;
-	background:#efefef;
-	border:1px solid #ccc;
-	width:18%;
-}
-.faded {
-	display:none;
-}
-#navigate {
+.site-navigation {
 	position:absolute;
 	right:100px;
 	top:48px;
 	font-weight:bold;
 }
-#navigate li {
+.site-navigation li {
 	display:inline;
 	padding:0 0 0 10px;
 }
-
+.rss-link {
+	color:#DFA137;
+}
 
 /* pseudoblocks */
-
 .pseudoblock {
 	position:absolute;
+	top:auto;
+	left:auto;
 	right:40px;
 	bottom:40px;
 	padding:10px;
 	background:#efefef;
 	border:1px solid #ccc;
 	width:170px;
+	margin:0;
+	color:inherit;
 }
 .pseudoblock p {
 	margin-bottom:.8em;
 	line-height:15px;
 }
 /*authors block*/
-#authorsblock {
+.authors-panel {
 	width:672px;
 	bottom:30px;
 }
-#authorsblock dd,
-#authorsblock dt {
+.authors-panel dd,
+.authors-panel dt {
 	float:left;
 	width:100px;
 	padding-bottom:10px;
-	overflow: hidden;
+	overflow:hidden;
 }
-#authorsblock dt {
+.authors-panel dt {
 	font-weight:bold;
-	clear: left;
+	clear:left;
 }
-#authorsblock dd {
+.authors-panel dd {
 	width:100px;
 	padding-left:10px;
 }
-#authorsblock dl {
+.authors-column {
 	width:210px;
 	float:left;
-	border: 1px solid #ccc;
-	border-width: 0 1px 0 0;
+	border:1px solid #ccc;
+	border-width:0 1px 0 0;
 	padding-right:10px;
 }
-#commentsblock {
-	width:260px;
+.author-entry {
+	display:flow-root;
 }
-#commentsblock .author {
-	font-weight:bold;
+.authors-column--middle {
+	padding-left:10px;
 }
-#commentsblock .date {
-	font-style:italic;
-}
-#commentsblock p {
-	margin-top:4px;
-}
-#rss {
-	color:#DFA137;
-}
-#authorsblock .bordered {
-	border-width: 0;
+.authors-column--last {
+	border-width:0;
 	padding-left:10px;
 	padding-right:0;
 }
-.center {
-	padding-left:10px;
-}
-#montheslistblock {
-	width: 110px;
-	line-height: 1.6;
-	bottom: auto;
-	top: 80px;
-	color: #aaa;
+.montheslist-panel {
+	width:110px;
+	line-height:1.6;
+	bottom:auto;
+	top:80px;
+	color:#aaa;
 }

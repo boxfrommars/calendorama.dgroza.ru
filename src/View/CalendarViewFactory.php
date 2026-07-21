@@ -28,7 +28,8 @@ final readonly class CalendarViewFactory
         $today = $this->todayIn($month);
 
         return new CalendarView(
-            $month->month . '_' . $month->year,
+            $month->month,
+            $month->year,
             $this->weeks($month, $today),
             new MonthNavigationView(
                 $month->name,
@@ -78,7 +79,7 @@ final readonly class CalendarViewFactory
         }
 
         $postView = $post === null ? null : new CalendarPostView(
-            'f' . $month->year . '_' . $month->month . '_' . $day,
+            '#d' . $month->year . '_' . $month->month . '_' . $day,
             $post->title,
             $post->fullUrl,
             $post->thumbnailUrl,
@@ -103,7 +104,6 @@ final readonly class CalendarViewFactory
         return new MonthLinkView(
             $monthName . ' ' . $year,
             '/#d' . $year . '_' . $month,
-            'm' . $year . '_' . $month,
         );
     }
 }

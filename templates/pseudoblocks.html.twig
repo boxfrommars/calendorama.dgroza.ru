@@ -1,73 +1,69 @@
-<template id="montheslist-template">
-	<div id="montheslistblock" class="cl cleanable faded pseudoblock"><ul>
-		<li><a href="#january" class="goto pseudotooltip" title="January" id="m2010_1">January</a> (5)</li>
-		<li><a href="#february" class="goto pseudotooltip" title="February" id="m2010_2">February</a> (2)</li>
-		<li><a href="#march" class="goto pseudotooltip" title="March" id="m2010_3">March</a> (27)</li>
-		<li><a href="#april" class="goto pseudotooltip" title="April" id="m2010_4">April</a> (5)</li>
-		<li><a href="#may" class="goto pseudotooltip" title="May" id="m2010_5">May</a> (2)</li>
-		<li><a href="#june" class="goto pseudotooltip" title="June" id="m2010_6">June</a> (2)</li>
-		<li><a href="#july" class="goto pseudotooltip" title="July" id="m2010_7">July</a> (1)</li>
-		<li><a href="#august" class="goto pseudotooltip" title="August" id="m2010_8">August</a> (2)</li>
-		<li><a href="#september" class="goto pseudotooltip" title="September" id="m2010_9">September</a> (1)</li>
-		<li><a href="#october" class="goto pseudotooltip" title="October" id="m2010_10">October</a> (0)</li>
-		<li><a href="#november" class="goto pseudotooltip" title="November" id="m2010_11">November</a> (2)</li>
-		<li><a href="#december" class="goto pseudotooltip" title="December" id="m2010_12">December</a> (4)</li>
+<dialog class="pseudoblock montheslist-panel" data-panel="montheslist" data-close-on-click aria-label="Месяцы" tabindex="-1" hidden>
+	<ul>
+		<li><a href="/#d2010_1" data-calendar-route="#d2010_1" data-tooltip="January">January</a> (5)</li>
+		<li><a href="/#d2010_2" data-calendar-route="#d2010_2" data-tooltip="February">February</a> (2)</li>
+		<li><a href="/#d2010_3" data-calendar-route="#d2010_3" data-tooltip="March">March</a> (27)</li>
+		<li><a href="/#d2010_4" data-calendar-route="#d2010_4" data-tooltip="April">April</a> (5)</li>
+		<li><a href="/#d2010_5" data-calendar-route="#d2010_5" data-tooltip="May">May</a> (2)</li>
+		<li><a href="/#d2010_6" data-calendar-route="#d2010_6" data-tooltip="June">June</a> (2)</li>
+		<li><a href="/#d2010_7" data-calendar-route="#d2010_7" data-tooltip="July">July</a> (1)</li>
+		<li><a href="/#d2010_8" data-calendar-route="#d2010_8" data-tooltip="August">August</a> (2)</li>
+		<li><a href="/#d2010_9" data-calendar-route="#d2010_9" data-tooltip="September">September</a> (1)</li>
+		<li><a href="/#d2010_10" data-calendar-route="#d2010_10" data-tooltip="October">October</a> (0)</li>
+		<li><a href="/#d2010_11" data-calendar-route="#d2010_11" data-tooltip="November">November</a> (2)</li>
+		<li><a href="/#d2010_12" data-calendar-route="#d2010_12" data-tooltip="December">December</a> (4)</li>
 		<li>total (53/365)</li>
-	</ul></div>
-</template>
+	</ul>
+</dialog>
 
-<template id="about-template">
-	<div id="aboutblock" class="cl cleanable faded pseudoblock">
-		<h3>проект <i>календорама!</i></h3>
-		<p>это простой блог-календарь с&nbsp;картинками-записями.</p>
-		<p><b>идея и&nbsp;дизайн (или его отсутствие):</b> надя гиммер</p>
-		<p><b>реализация и&nbsp;наполнение:</b> ваш покорный слуга</p>
-		<p><b>дата запуска:</b> 17&nbsp;марта 2009</p>
-		<p>boxfrommars@gmail.com</p>
-	</div>
-</template>
+<dialog class="pseudoblock about-panel" data-panel="about" data-close-on-click aria-label="О проекте" tabindex="-1" hidden>
+	<h3>проект <i>календорама!</i></h3>
+	<p>это простой блог-календарь с&nbsp;картинками-записями.</p>
+	<p><b>идея и&nbsp;дизайн (или его отсутствие):</b> надя гиммер</p>
+	<p><b>реализация и&nbsp;наполнение:</b> ваш покорный слуга</p>
+	<p><b>дата запуска:</b> 17&nbsp;марта 2009</p>
+	<p>boxfrommars@gmail.com</p>
+</dialog>
 
-<template id="authors-template">
-	<div id="authorsblock" class="cl cleanable faded pseudoblock">
-		<h3>авторы картинок</h3>
-		<dl>
-			<dt>юра (юрек)</dt><dd><a href="http://vkontakte.ru/id12733421" class="pseudotooltip" title="Юрий Лебедев">vkontakte</a></dd><br>
-			<dt>кардамон</dt><dd><a href="http://fansales.livejournal.com" class="pseudotooltip" title="Life Aquatic">livejournal</a></dd><br>
-			<dt>гельветик (жукевич)</dt><dd>так жукевич же сдох!</dd><br>
-			<dt>неизвестный</dt><dd>предпочитает оставаться инкогнито</dd><br>
-			<dt>даша</dt><dd>информация скрыта</dd><br>
-			<dt>карнавал</dt><dd><a href="http://manutd.com" class="pseudotooltip" title="Manchester United official page">MU</a></dd><br>
-			<dt>настя</dt><dd><a href="http://vkontakte.ru/id29120786" class="pseudotooltip" title="Monika Gustaffson">vkontakte</a></dd><br>
-			<dt>елисей</dt><dd><a href="http://vkontakte.ru/id834086" class="pseudotooltip" title="Елисей Радионов">vkontakte</a></dd><br>
-			<dt>хейлик (ройксопп)</dt><dd>о хейлике нам пока ничего не известно</dd><br>
-			<dt>лида пила</dt><dd><a href="http://vkontakte.ru/id13266630" class="pseudotooltip" title="Лида Пила">vkontakte</a></dd><br>
-			<dt>юля</dt><dd><a href="http://vkontakte.ru/id10731099" class="pseudotooltip" title="Юлия Мизина">vkontakte</a></dd><br>
-			<dt>калинина-малинина</dt><dd><a href="http://vkontakte.ru/id4871535" class="pseudotooltip" title="Natasha Kalinina">vkontakte</a><br>&nbsp;</dd><br>
-			<dt>сохина</dt><dd>ключевая фигура</dd><br>
-			<dt>б-ка</dt><dd>сложная персона</dd><br>
-			<dt>дг</dt><dd><a href="http://dgroza.ru" class="pseudotooltip" title="Дмитрий Гроза-Гудмундсдоттир">dgroza</a></dd><br>
-			<dt>мамке</dt><dd><a href="http://vkontakte.ru/id3579364" class="pseudotooltip" title="Ольга Мурзина">vkontakte</a></dd><br>
-		</dl>
-		<dl class="center">
-			<dt>дима (сосед №1)</dt><dd>сосед</dd><br>
-			<dt>ольга николаевна</dt><dd><a href="http://vkontakte.ru/id4506412" class="pseudotooltip" title="Ольга Николаевна">vkontakte</a><br>&nbsp;</dd><br>
-			<dt>галя</dt><dd>информация отсутствует</dd><br>
-			<dt>поивт (2 курс)</dt><dd><ul>
-				<li>кирилл астахов</li><li>павел башевский</li><li>артём гузенко</li><li>степан иванов</li><li>майн канаш</li><li>малик канаш</li><li>роман кривошей</li><li>влад недбайло</li><li>евгений полушин</li><li>георгий пуляев</li><li>родион слободенюк</li>
-			</ul></dd><br>
-			<dt>андрейка</dt><dd><a href="http://vkontakte.ru/id213490" class="pseudotooltip" title="Андрей Гроза">vkontakte</a></dd><br>
-			<dt>голимбовски</dt><dd><a href="http://vkontakte.ru/id27131962" class="pseudotooltip" title="Игорь Голимбовски">vkontakte</a></dd><br>
-			<dt>ярослав</dt><dd>данные подтверждаются</dd><br>
-			<dt>аматери</dt><dd><a href="http://vkontakte.ru/id451707" class="pseudotooltip" title="Виталий Amatery Апрелков">vkontakte</a></dd><br>
-			<dt>настя апрелкова</dt><dd><a href="http://vkontakte.ru/id1083793" class="pseudotooltip" title="Анастасия Апрелкова">vkontakte</a></dd><br>
-			<dt>маша</dt><dd>информация отсутствует</dd><br>
-			<dt>сергей</dt><dd>данные подтверждаются</dd><br>
-		</dl>
-		<dl class="bordered">
-			<dt>люба</dt><dd><a href="http://vkontakte.ru/id7237543" class="pseudotooltip" title="Любовь Архипова">vkontakte</a></dd><br>
-			<dt>виталий dreamcatcher</dt><dd><a href="http://vkontakte.ru/id3772217" class="pseudotooltip" title="Виталий Dreamcatcher Федирко">vkontakte</a></dd><br>
-			<dt>вадим-директор</dt><dd>коммерческая (ага-ага) тайна</dd><br>
-			<dt>максим</dt><dd>пребывает инкогнито</dd><br>
-		</dl>
-	</div>
-</template>
+<dialog class="pseudoblock authors-panel" data-panel="authors" data-close-on-click aria-label="Авторы картинок" tabindex="-1" hidden>
+	<h3>авторы картинок</h3>
+	<dl class="authors-column">
+		<div class="author-entry"><dt>юра (юрек)</dt><dd><a href="http://vkontakte.ru/id12733421" data-tooltip="Юрий Лебедев">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>кардамон</dt><dd><a href="http://fansales.livejournal.com" data-tooltip="Life Aquatic">livejournal</a></dd></div>
+		<div class="author-entry"><dt>гельветик (жукевич)</dt><dd>так жукевич же сдох!</dd></div>
+		<div class="author-entry"><dt>неизвестный</dt><dd>предпочитает оставаться инкогнито</dd></div>
+		<div class="author-entry"><dt>даша</dt><dd>информация скрыта</dd></div>
+		<div class="author-entry"><dt>карнавал</dt><dd><a href="http://manutd.com" data-tooltip="Manchester United official page">MU</a></dd></div>
+		<div class="author-entry"><dt>настя</dt><dd><a href="http://vkontakte.ru/id29120786" data-tooltip="Monika Gustaffson">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>елисей</dt><dd><a href="http://vkontakte.ru/id834086" data-tooltip="Елисей Радионов">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>хейлик (ройксопп)</dt><dd>о хейлике нам пока ничего не известно</dd></div>
+		<div class="author-entry"><dt>лида пила</dt><dd><a href="http://vkontakte.ru/id13266630" data-tooltip="Лида Пила">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>юля</dt><dd><a href="http://vkontakte.ru/id10731099" data-tooltip="Юлия Мизина">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>калинина-малинина</dt><dd><a href="http://vkontakte.ru/id4871535" data-tooltip="Natasha Kalinina">vkontakte</a><br>&nbsp;</dd></div>
+		<div class="author-entry"><dt>сохина</dt><dd>ключевая фигура</dd></div>
+		<div class="author-entry"><dt>б-ка</dt><dd>сложная персона</dd></div>
+		<div class="author-entry"><dt>дг</dt><dd><a href="http://dgroza.ru" data-tooltip="Дмитрий Гроза-Гудмундсдоттир">dgroza</a></dd></div>
+		<div class="author-entry"><dt>мамке</dt><dd><a href="http://vkontakte.ru/id3579364" data-tooltip="Ольга Мурзина">vkontakte</a></dd></div>
+	</dl>
+	<dl class="authors-column authors-column--middle">
+		<div class="author-entry"><dt>дима (сосед №1)</dt><dd>сосед</dd></div>
+		<div class="author-entry"><dt>ольга николаевна</dt><dd><a href="http://vkontakte.ru/id4506412" data-tooltip="Ольга Николаевна">vkontakte</a><br>&nbsp;</dd></div>
+		<div class="author-entry"><dt>галя</dt><dd>информация отсутствует</dd></div>
+		<div class="author-entry"><dt>поивт (2 курс)</dt><dd><ul>
+			<li>кирилл астахов</li><li>павел башевский</li><li>артём гузенко</li><li>степан иванов</li><li>майн канаш</li><li>малик канаш</li><li>роман кривошей</li><li>влад недбайло</li><li>евгений полушин</li><li>георгий пуляев</li><li>родион слободенюк</li>
+		</ul></dd></div>
+		<div class="author-entry"><dt>андрейка</dt><dd><a href="http://vkontakte.ru/id213490" data-tooltip="Андрей Гроза">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>голимбовски</dt><dd><a href="http://vkontakte.ru/id27131962" data-tooltip="Игорь Голимбовски">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>ярослав</dt><dd>данные подтверждаются</dd></div>
+		<div class="author-entry"><dt>аматери</dt><dd><a href="http://vkontakte.ru/id451707" data-tooltip="Виталий Amatery Апрелков">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>настя апрелкова</dt><dd><a href="http://vkontakte.ru/id1083793" data-tooltip="Анастасия Апрелкова">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>маша</dt><dd>информация отсутствует</dd></div>
+		<div class="author-entry"><dt>сергей</dt><dd>данные подтверждаются</dd></div>
+	</dl>
+	<dl class="authors-column authors-column--last">
+		<div class="author-entry"><dt>люба</dt><dd><a href="http://vkontakte.ru/id7237543" data-tooltip="Любовь Архипова">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>виталий dreamcatcher</dt><dd><a href="http://vkontakte.ru/id3772217" data-tooltip="Виталий Dreamcatcher Федирко">vkontakte</a></dd></div>
+		<div class="author-entry"><dt>вадим-директор</dt><dd>коммерческая (ага-ага) тайна</dd></div>
+		<div class="author-entry"><dt>максим</dt><dd>пребывает инкогнито</dd></div>
+	</dl>
+</dialog>

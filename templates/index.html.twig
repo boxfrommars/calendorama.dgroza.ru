@@ -1,26 +1,38 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
 	<meta charset="utf-8">
 	<title>calendorama!</title>
-	<link rel="stylesheet" href="/style.css?i=1" media="screen">
+	<link rel="stylesheet" href="/style.css?i=3" media="screen">
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link rel="alternate" type="application/rss+xml" title="calendorama feed" href="/rss.xml">
-	<script type="module" src="/script.js?i=2"></script>
+	<script type="module" src="/script.js?i=5"></script>
 </head>
 <body>
-<div id="wrap">
-<h1>calendorama!</h1>
-<ul id="navigate">
-	<li><a href="/rss.xml" class="permtooltip" title="подписаться на rss" id="rss">rss</a></li>
-	<li><a href="#authors" class="pseudo permtooltip" title="авторы картинок" id="authors">authors</a></li>
-	<li><a href="#montheslist" class="pseudo permtooltip" title="перейти к месяцу" id="montheslist">monthes</a></li>
-</ul>
-<div id="month-wrap"></div>
-<p id="footer">dmitry groza<br>nadja gimmer<br>in incredible <b><a href="#calendoramaproject" id="about" class="pseudo permtooltip" title="о проекте">calendorama project!</a></b></p>
-<!-- надя гиммер, вы прекрасны :–) -->
-</div>
+<div class="site-shell" data-region="site">
+	<header class="site-header">
+		<h1>calendorama!</h1>
+		<nav class="site-navigation" aria-label="Основная навигация">
+			<ul>
+				<li><a href="/rss.xml" class="rss-link" data-tooltip="подписаться на rss">rss</a></li>
+				<li><button type="button" class="link-button" data-panel-target="authors" data-tooltip="авторы картинок">authors</button></li>
+				<li><button type="button" class="link-button" data-panel-target="montheslist" data-tooltip="перейти к месяцу">monthes</button></li>
+			</ul>
+		</nav>
+	</header>
+	<main>
+		<div class="month-region" data-region="month" aria-busy="false"></div>
+		<p class="status-message loading" data-region="status" role="status" hidden></p>
+		<p class="status-message loading" data-region="alert" role="alert" hidden></p>
+		<dialog class="post-view" data-region="post-view" data-close-on-click aria-label="Полноразмерное изображение" tabindex="-1" hidden>
+			<img alt="">
+		</dialog>
+	</main>
+	<footer class="site-footer">dmitry groza<br>nadja gimmer<br>in incredible <b><button type="button" class="link-button" data-panel-target="about" data-tooltip="о проекте">calendorama project!</button></b></footer>
+	<!-- надя гиммер, вы прекрасны :–) -->
 
-{% include 'pseudoblocks.html.twig' %}
+	{% include 'pseudoblocks.html.twig' %}
+</div>
+<p class="tooltip-box" data-region="tooltip" role="tooltip" hidden></p>
 </body>
 </html>

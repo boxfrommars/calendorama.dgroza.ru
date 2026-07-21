@@ -7,7 +7,7 @@ namespace Calendorama\View\Model;
 final readonly class CalendarPostView
 {
     public function __construct(
-        public string $anchorId,
+        public string $route,
         public string $title,
         public string $fullUrl,
         public string $thumbnailUrl,

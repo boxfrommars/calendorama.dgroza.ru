@@ -1,6 +1,10 @@
-<table id="calendar" cellspacing="1" class="{{ calendar.class }}">
+<section class="calendar-view" data-calendar-view data-month="{{ calendar.month }}" data-year="{{ calendar.year }}">
+	<table class="calendar" aria-label="{{ calendar.navigation.monthName }} {{ calendar.year }}">
+		<tbody>
 {% for week in calendar.weeks %}
-	<tr>{% for cell in week %}<td class="{{ cell.class }}">{% if cell.post %}<a id="{{ cell.post.anchorId }}" title="{{ cell.post.title }}" class="view_full tooltip goto" href="{{ cell.post.fullUrl }}"><img alt="{{ cell.post.title }}" class="thumb" width="90px" src="{{ cell.post.thumbnailUrl }}" /></a>{% elseif cell.day is not null %}<span>{{ cell.day }}</span>{% else %} {% endif %}</td>{% endfor %}</tr>
+			<tr>{% for cell in week %}<td{% if cell.class %} class="{{ cell.class }}"{% endif %}{% if 'today' in cell.class %} aria-current="date"{% endif %}{% if cell.day is null %} aria-hidden="true"{% endif %}>{% if cell.post %}<a class="view_full" href="{{ cell.post.fullUrl }}" data-calendar-route="{{ cell.post.route }}" data-tooltip="{{ cell.post.title }}"><img alt="{{ cell.post.title }}" class="thumb" width="90" src="{{ cell.post.thumbnailUrl }}"></a>{% elseif cell.day is not null %}<span>{{ cell.day }}</span>{% endif %}</td>{% endfor %}</tr>
 {% endfor %}
-</table>
-	<h2 id="month">{{ calendar.navigation.monthName }}&nbsp;&nbsp;<span id="month-nav" class="nav"><a title="{{ calendar.navigation.previous.title }}" href="{{ calendar.navigation.previous.href }}" class="goto previous tooltip" id="{{ calendar.navigation.previous.id }}">&lt;</a><a title="{{ calendar.navigation.next.title }}" href="{{ calendar.navigation.next.href }}" class="goto next tooltip" id="{{ calendar.navigation.next.id }}">&gt;</a></span></h2>
+		</tbody>
+	</table>
+	<h2 class="month-heading">{{ calendar.navigation.monthName }}&nbsp;&nbsp;<span class="month-nav" role="navigation" aria-label="Соседние месяцы"><a href="{{ calendar.navigation.previous.href }}" class="previous" data-calendar-route="{{ calendar.navigation.previous.href }}" data-tooltip="{{ calendar.navigation.previous.title }}" aria-label="{{ calendar.navigation.previous.title }}">&lt;</a><a href="{{ calendar.navigation.next.href }}" class="next" data-calendar-route="{{ calendar.navigation.next.href }}" data-tooltip="{{ calendar.navigation.next.title }}" aria-label="{{ calendar.navigation.next.title }}">&gt;</a></span></h2>
+</section>

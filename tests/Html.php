@@ -5,19 +5,25 @@ declare(strict_types=1);
 namespace Calendorama\Tests;
 
 use RuntimeException;
+use Symfony\Component\DomCrawler\Crawler;
 
 final class Html
 {
-    public static function canonical(string $html): string
+    public static function crawler(string $html): Crawler
     {
-        $normalized = str_replace("\r\n", "\n", trim($html));
-        $canonical = preg_replace('/>\s+</u', '><', $normalized);
+        return new Crawler($html);
+    }
 
-        if ($canonical === null) {
-            throw new RuntimeException('Could not canonicalize HTML.');
+    public static function normalizedText(string $html): string
+    {
+        $text = self::crawler($html)->text('', true);
+        $normalized = preg_replace('/\s+/u', ' ', trim($text));
+
+        if ($normalized === null) {
+            throw new RuntimeException('Could not normalize HTML text.');
         }
 
-        return $canonical;
+        return $normalized;
     }
 
     private function __construct()

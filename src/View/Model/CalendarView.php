@@ -10,7 +10,8 @@ final readonly class CalendarView
      * @param list<list<CalendarCellView>> $weeks
      */
     public function __construct(
-        public string $class,
+        public int $month,
+        public int $year,
         public array $weeks,
         public MonthNavigationView $navigation,
     ) {

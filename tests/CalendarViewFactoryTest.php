@@ -14,22 +14,21 @@ use Symfony\Component\Clock\MockClock;
 
 final class CalendarViewFactoryTest extends TestCase
 {
-    public function testBuildsTypedSixWeekViewAndPreservesHtml(): void
+    public function testBuildsTypedSixWeekViewAndExplicitRoutes(): void
     {
         $factory = self::factory('2026-07-21 12:00:00');
         $view = $factory->create(new CalendarMonth(3, 2010));
 
         self::assertCount(6, $view->weeks);
         self::assertCount(42, array_merge(...$view->weeks));
-        self::assertSame('3_2010', $view->class);
-        self::assertSame('m2010_2', $view->navigation->previous->id);
-        self::assertSame('m2010_4', $view->navigation->next->id);
+        self::assertSame(3, $view->month);
+        self::assertSame(2010, $view->year);
+        self::assertSame('/#d2010_2', $view->navigation->previous->href);
+        self::assertSame('/#d2010_4', $view->navigation->next->href);
+        self::assertSame('#d2010_3_1', self::day($view->weeks, 1)->post?->route);
 
         $html = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $view]);
-        self::assertSame(
-            'edda0add5890f658f5881e190149fa77b4c15ebf32bd3cca8d02970ff3afd348',
-            hash('sha256', Html::canonical($html)),
-        );
+        self::assertCount(42, Html::crawler($html)->filter('td'));
     }
 
     public function testUsesInjectedClockForTodayClass(): void
@@ -38,6 +37,9 @@ final class CalendarViewFactoryTest extends TestCase
 
         self::assertSame('today', self::day($view->weeks, 17)->class);
         self::assertStringNotContainsString('today', self::day($view->weeks, 16)->class);
+
+        $html = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $view]);
+        self::assertCount(1, Html::crawler($html)->filter('td[aria-current="date"]'));
     }
 
     public function testHandlesLeapEmptyAndBoundaryMonths(): void
@@ -52,8 +54,8 @@ final class CalendarViewFactoryTest extends TestCase
             }
         }
 
-        self::assertSame('m0_12', $factory->create(new CalendarMonth(1, 1))->navigation->previous->id);
-        self::assertSame('m10000_1', $factory->create(new CalendarMonth(12, 9999))->navigation->next->id);
+        self::assertSame('/#d0_12', $factory->create(new CalendarMonth(1, 1))->navigation->previous->href);
+        self::assertSame('/#d10000_1', $factory->create(new CalendarMonth(12, 9999))->navigation->next->href);
     }
 
     public function testEscapesFileBackedTitleInTwig(): void
@@ -70,7 +72,7 @@ final class CalendarViewFactoryTest extends TestCase
                 ['calendar' => $factory->create(new CalendarMonth(3, 2010))],
             );
 
-            self::assertStringContainsString('title="a&quot;b&lt;c&amp;d"', $html);
+            self::assertStringContainsString('data-tooltip="a&quot;b&lt;c&amp;d"', $html);
             self::assertStringContainsString('alt="a&quot;b&lt;c&amp;d"', $html);
         } finally {
             @unlink($directory . '/3.txt');

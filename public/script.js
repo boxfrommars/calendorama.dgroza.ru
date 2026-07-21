@@ -8,18 +8,28 @@ const FADE_DURATION = 400;
 const CALENDAR_FADE_DURATION = 1000;
 const REQUEST_TIMEOUT = 30000;
 
-const wrap = document.querySelector('#wrap');
-const monthWrap = document.querySelector('#month-wrap');
+const elements = {
+    alert: document.querySelector('[data-region="alert"]'),
+    month: document.querySelector('[data-region="month"]'),
+    postView: document.querySelector('[data-region="post-view"]'),
+    postImage: document.querySelector('[data-region="post-view"] img'),
+    status: document.querySelector('[data-region="status"]'),
+    tooltip: document.querySelector('[data-region="tooltip"]'),
+};
 
 const state = {
     calendarDate: null,
     activeRequest: null,
     routeVersion: 0,
     tooltipTarget: null,
+    panel: null,
+    panelOpener: null,
+    postOpener: null,
 };
 
 function parseHash(hash) {
-    const match = hash.replace(/^#/, '').match(/^d([0-9]{1,4})_([0-9]{1,2})(?:_([0-9]{1,2}))?$/);
+    const route = hash.includes('#') ? hash.slice(hash.indexOf('#')) : hash;
+    const match = route.replace(/^#/, '').match(/^d([0-9]{1,4})_([0-9]{1,2})(?:_([0-9]{1,2}))?$/);
     if (!match) return null;
 
     const date = {year: Number(match[1]), month: Number(match[2]), day: match[3] ? Number(match[3]) : null};
@@ -33,8 +43,8 @@ function currentMonth() {
     return {year: now.getFullYear(), month: now.getMonth() + 1, day: null};
 }
 
-function formatMonthHash(date) { return `d${date.year}_${date.month}`; }
-function formatDayHash(date) { return `d${date.year}_${date.month}_${date.day}`; }
+function formatMonthHash(date) { return `#d${date.year}_${date.month}`; }
+function formatDayHash(date) { return `#d${date.year}_${date.month}_${date.day}`; }
 function sameMonth(left, right) { return left !== null && left.year === right.year && left.month === right.month; }
 
 function animate(element, keyframes, duration) {
@@ -42,51 +52,79 @@ function animate(element, keyframes, duration) {
 }
 
 async function fadeIn(element, duration = FADE_DURATION) {
-    element.style.display = 'block';
+    element.hidden = false;
     await animate(element, [{opacity: 0}, {opacity: 1}], duration);
     element.style.opacity = '1';
 }
 
-async function fadeOutAndRemove(element, callback = null) {
-    if (!element?.isConnected) {
-        callback?.();
-        return;
-    }
+async function fadeOut(element) {
+    if (element.hidden) return;
     await animate(element, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
-    element.remove();
-    callback?.();
+    element.hidden = true;
+    element.style.opacity = '';
 }
 
-function removeTooltip() {
-    document.querySelector('#tooltip')?.remove();
+async function openDialog(dialog, opener = null) {
+    dialog.hidden = false;
+    if (!dialog.open) dialog.show();
+    await animate(dialog, [{opacity: 0}, {opacity: 1}], FADE_DURATION);
+    dialog.style.opacity = '1';
+    dialog.focus({preventScroll: true});
+    if (dialog === elements.postView) state.postOpener = opener;
+}
+
+async function closeDialog(dialog, restoreFocus = true) {
+    if (!dialog.open && dialog.hidden) return;
+    await animate(dialog, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
+    if (dialog.open) dialog.close();
+    dialog.hidden = true;
+    dialog.style.opacity = '';
+
+    const opener = dialog === elements.postView ? state.postOpener : state.panelOpener;
+    if (dialog === elements.postView) state.postOpener = null;
+    if (dialog === state.panel) {
+        state.panel = null;
+        state.panelOpener = null;
+    }
+    if (restoreFocus && opener?.isConnected) opener.focus({preventScroll: true});
+}
+
+function hideTooltip() {
+    elements.tooltip.hidden = true;
+    elements.tooltip.style.opacity = '';
     state.tooltipTarget = null;
 }
 
-function clean() {
-    document.querySelectorAll('.cleanable').forEach((element) => fadeOutAndRemove(element));
-    removeTooltip();
+async function clean() {
+    const dialogs = document.querySelectorAll('dialog[open]');
+    await Promise.all(Array.from(dialogs, (dialog) => closeDialog(dialog, false)));
+    hideInfo();
+    hideTooltip();
 }
 
-function hideInfo() { document.querySelector('#info-block')?.remove(); }
+function hideInfo() {
+    elements.status.hidden = true;
+    elements.status.textContent = '';
+    elements.alert.hidden = true;
+    elements.alert.textContent = '';
+}
 
-function showInfo(text) {
+function showInfo(text, isAlert = false) {
     hideInfo();
-    const info = document.createElement('div');
-    info.id = 'info-block';
-    info.className = 'loading cleanable';
-    info.textContent = text;
-    wrap.append(info);
+    const element = isAlert ? elements.alert : elements.status;
+    element.textContent = text;
+    element.hidden = false;
 }
 
 async function appendCalendar(html, request) {
-    const previous = monthWrap.querySelector('#calendar');
+    const previous = elements.month.querySelector('.calendar');
     if (previous) await animate(previous, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
     if (state.activeRequest !== request || request.signal.aborted) return false;
 
     hideInfo();
-    clean();
-    monthWrap.innerHTML = html;
-    const calendar = monthWrap.querySelector('#calendar');
+    await clean();
+    elements.month.innerHTML = html;
+    const calendar = elements.month.querySelector('.calendar');
     if (calendar) await fadeIn(calendar, CALENDAR_FADE_DURATION);
     return true;
 }
@@ -96,6 +134,7 @@ async function loadCalendar(date) {
     const request = new AbortController();
     state.activeRequest = request;
     const timeout = window.setTimeout(() => request.abort(), REQUEST_TIMEOUT);
+    elements.month.setAttribute('aria-busy', 'true');
     showInfo(INFO.loading);
 
     try {
@@ -110,56 +149,57 @@ async function loadCalendar(date) {
     } catch (error) {
         if (error.name !== 'AbortError' || state.activeRequest === request) {
             hideInfo();
-            showInfo(INFO.ajaxError);
+            showInfo(INFO.ajaxError, true);
         }
         return false;
     } finally {
         window.clearTimeout(timeout);
         if (state.activeRequest === request) state.activeRequest = null;
+        elements.month.setAttribute('aria-busy', 'false');
     }
 }
 
-function showFullImage(postView) {
-    postView.style.height = 'auto';
-    postView.style.width = 'auto';
-    postView.style.overflow = 'visible';
-    postView.style.padding = '';
-    hideInfo();
-    fadeIn(postView);
+function prepareFullImage() {
+    Object.assign(elements.postView.style, {height: '1px', width: '1px', overflow: 'hidden', padding: '0'});
 }
 
-async function viewFull(source, version) {
+async function showFullImage(opener) {
+    Object.assign(elements.postView.style, {height: 'auto', width: 'auto', overflow: 'visible', padding: ''});
+    hideInfo();
+    await openDialog(elements.postView, opener);
+}
+
+async function viewFull(date, version) {
     showInfo(INFO.loading);
-    const previous = document.querySelector('#post-view');
-    if (previous) await fadeOutAndRemove(previous);
+    await closeDialog(elements.postView, false);
     if (version !== state.routeVersion) return;
 
-    const postView = document.createElement('div');
-    postView.id = 'post-view';
-    postView.className = 'cl cleanable faded postview';
-    Object.assign(postView.style, {height: '1px', width: '1px', overflow: 'hidden', padding: '0'});
-    const image = new Image();
-    postView.append(image);
-    wrap.append(postView);
+    const route = formatDayHash(date);
+    const opener = elements.month.querySelector(`[data-calendar-route="${route}"]`);
+    const source = opener?.getAttribute('href') ?? `/blog/${date.month}_${date.day}_full.jpg`;
+    const title = opener?.dataset.tooltip ?? '';
+    prepareFullImage();
+    elements.postImage.alt = title;
 
     let handled = false;
     const show = () => {
-        if (!handled) {
-            handled = true;
-            version === state.routeVersion ? showFullImage(postView) : postView.remove();
-        }
+        if (handled) return;
+        handled = true;
+        if (version === state.routeVersion) showFullImage(opener);
     };
     const fail = () => {
-        if (!handled) {
-            handled = true;
-            if (version === state.routeVersion) showInfo(INFO.noImage);
-            else postView.remove();
+        if (handled) return;
+        handled = true;
+        if (version === state.routeVersion) {
+            closeDialog(elements.postView, false);
+            showInfo(INFO.noImage, true);
         }
     };
-    image.addEventListener('load', show, {once: true});
-    image.addEventListener('error', fail, {once: true});
-    image.src = source;
-    if (image.complete) image.naturalWidth > 0 ? show() : fail();
+
+    elements.postImage.onload = show;
+    elements.postImage.onerror = fail;
+    elements.postImage.src = source;
+    if (elements.postImage.complete) elements.postImage.naturalWidth > 0 ? show() : fail();
 }
 
 async function handleHash() {
@@ -171,78 +211,114 @@ async function handleHash() {
     state.calendarDate = date;
     if (date.day !== null) {
         if (monthChanged && !(await loadCalendar(date))) return;
-        if (version === state.routeVersion) await viewFull(`/blog/${date.month}_${date.day}_full.jpg`, version);
+        if (version === state.routeVersion) await viewFull(date, version);
     } else if (monthChanged) {
         await loadCalendar(date);
     } else {
-        clean();
+        await clean();
     }
 }
 
-async function openPseudoblock(id) {
-    const template = document.querySelector(`#${id}-template`);
-    if (!(template instanceof HTMLTemplateElement)) return;
-    const previous = document.querySelector('.pseudoblock');
-    if (previous) await fadeOutAndRemove(previous);
-    const block = template.content.firstElementChild.cloneNode(true);
-    wrap.append(block);
-    await fadeIn(block);
+async function openPanel(name, opener) {
+    const panel = document.querySelector(`[data-panel="${name}"]`);
+    if (!(panel instanceof HTMLDialogElement)) return;
+    if (state.panel && state.panel !== panel) await closeDialog(state.panel, false);
+    state.panel = panel;
+    state.panelOpener = opener;
+    if (!panel.open) await openDialog(panel);
 }
 
-function tooltipAnchor(target) { return target.closest('a.tooltip, a.permtooltip, a.pseudotooltip'); }
+function routeFromAnchor(anchor) {
+    return parseHash(anchor.dataset.calendarRoute ?? anchor.hash);
+}
+
+function navigate(date) {
+    const hash = date.day === null ? formatMonthHash(date) : formatDayHash(date);
+    if (window.location.hash === hash) handleHash();
+    else window.location.hash = hash;
+}
+
+function tooltipTarget(target) {
+    return target.closest('[data-tooltip]');
+}
+
+function showTooltip(target, event = null) {
+    state.tooltipTarget = target;
+    elements.tooltip.textContent = target.dataset.tooltip;
+    elements.tooltip.hidden = false;
+    const bounds = target.getBoundingClientRect();
+    const top = event ? event.pageY + 20 : window.scrollY + bounds.bottom + 8;
+    const left = event ? event.pageX + 20 : window.scrollX + bounds.left;
+    elements.tooltip.style.top = `${top}px`;
+    elements.tooltip.style.left = `${left}px`;
+    animate(elements.tooltip, [{opacity: 0}, {opacity: 1}], FADE_DURATION);
+}
 
 document.addEventListener('mouseover', (event) => {
-    const anchor = tooltipAnchor(event.target);
-    if (!anchor || anchor.contains(event.relatedTarget)) return;
-    state.tooltipTarget = anchor;
-    anchor.dataset.tooltipTitle = anchor.title;
-    anchor.title = '';
-    const image = anchor.querySelector('img');
-    if (image) { image.dataset.tooltipAlt = image.alt; image.alt = ''; }
-    const tooltip = document.createElement('p');
-    tooltip.id = 'tooltip';
-    tooltip.textContent = anchor.dataset.tooltipTitle;
-    document.body.append(tooltip);
-    fadeIn(tooltip);
+    const target = tooltipTarget(event.target);
+    if (!target || target.contains(event.relatedTarget)) return;
+    showTooltip(target, event);
 });
 
 document.addEventListener('mouseout', (event) => {
-    const anchor = tooltipAnchor(event.target);
-    if (!anchor || anchor.contains(event.relatedTarget)) return;
-    anchor.title = anchor.dataset.tooltipTitle ?? '';
-    const image = anchor.querySelector('img');
-    if (image) image.alt = image.dataset.tooltipAlt ?? '';
-    removeTooltip();
+    const target = tooltipTarget(event.target);
+    if (!target || target.contains(event.relatedTarget)) return;
+    hideTooltip();
+});
+
+document.addEventListener('focusin', (event) => {
+    const target = tooltipTarget(event.target);
+    if (target) showTooltip(target);
+});
+
+document.addEventListener('focusout', (event) => {
+    const target = tooltipTarget(event.target);
+    if (target && !target.contains(event.relatedTarget)) hideTooltip();
 });
 
 document.addEventListener('mousemove', (event) => {
-    const tooltip = document.querySelector('#tooltip');
-    if (!tooltip || !state.tooltipTarget) return;
-    tooltip.style.top = `${event.pageY + 20}px`;
-    tooltip.style.left = `${event.pageX + 20}px`;
+    if (!state.tooltipTarget) return;
+    elements.tooltip.style.top = `${event.pageY + 20}px`;
+    elements.tooltip.style.left = `${event.pageX + 20}px`;
 });
 
-document.addEventListener('click', (event) => {
-    const pseudo = event.target.closest('a.pseudo');
-    if (pseudo) {
-        event.preventDefault();
-        openPseudoblock(pseudo.id);
+document.addEventListener('click', async (event) => {
+    const panelButton = event.target.closest('button[data-panel-target]');
+    if (panelButton) {
+        openPanel(panelButton.dataset.panelTarget, panelButton);
         return;
     }
 
-    const closable = event.target.closest('.cl');
-    if (closable) {
-        fadeOutAndRemove(closable);
-        if (closable.classList.contains('postview') && state.calendarDate) {
-            window.location.hash = formatMonthHash(state.calendarDate);
-        }
+    const anchor = event.target.closest('a[data-calendar-route]');
+    if (anchor) {
+        event.preventDefault();
+        const date = routeFromAnchor(anchor);
+        const panel = anchor.closest('dialog[data-panel]');
+        if (panel) await closeDialog(panel);
+        if (date) navigate(date);
+        return;
     }
 
-    const goto = event.target.closest('a.goto');
-    if (!goto) return;
-    event.preventDefault();
-    const date = parseHash(`#d${goto.id.slice(1)}`);
-    if (date) window.location.hash = date.day === null ? formatMonthHash(date) : formatDayHash(date);
+    const dialog = event.target.closest('dialog[data-close-on-click]');
+    if (!dialog) return;
+    if (dialog === elements.postView && state.calendarDate) {
+        await closeDialog(dialog);
+        navigate({...state.calendarDate, day: null});
+    } else {
+        await closeDialog(dialog);
+    }
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    if (elements.postView.open) {
+        event.preventDefault();
+        closeDialog(elements.postView);
+        if (state.calendarDate) navigate({...state.calendarDate, day: null});
+    } else if (state.panel?.open) {
+        event.preventDefault();
+        closeDialog(state.panel);
+    }
 });
 
 window.addEventListener('hashchange', handleHash);
