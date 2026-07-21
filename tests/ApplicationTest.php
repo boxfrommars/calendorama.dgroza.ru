@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Calendorama\Tests;
 
 use Calendorama\ApplicationFactory;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class ControllerTest extends TestCase
+final class ApplicationTest extends TestCase
 {
-    public function testIndexResponseHasSemanticLandmarksAndPermanentDialogs(): void
+    public function testIndexResponseHasSemanticLandmarksAndNativePopovers(): void
     {
         $response = self::application()->index();
         $html = self::content($response);
@@ -26,9 +26,9 @@ final class ControllerTest extends TestCase
         self::assertCount(1, $crawler->filter('nav'));
         self::assertCount(1, $crawler->filter('main'));
         self::assertCount(1, $crawler->filter('footer'));
-        self::assertCount(3, $crawler->filter('button[type="button"][data-panel-target][aria-controls][aria-expanded="false"]'));
-        self::assertCount(3, $crawler->filter('dialog[data-panel][aria-labelledby]'));
-        self::assertCount(3, $crawler->filter('dialog.panel-dialog[data-panel]'));
+        self::assertCount(3, $crawler->filter('button[type="button"][popovertarget]'));
+        self::assertCount(3, $crawler->filter('dialog.panel-dialog[popover="auto"][aria-labelledby]'));
+        self::assertCount(0, $crawler->filter('[data-panel], [data-panel-target], [aria-controls], [aria-expanded]'));
         self::assertCount(0, $crawler->filter('dialog[hidden]'));
         self::assertCount(1, $crawler->filter('dialog[data-region="post-view"][aria-labelledby] img'));
         self::assertCount(1, $crawler->filter('#authors-dialog[aria-labelledby="authors-dialog-title"]'));
@@ -51,7 +51,7 @@ final class ControllerTest extends TestCase
     public function testIndexRoutesAndAuthorMarkupAreExplicit(): void
     {
         $crawler = Html::crawler(self::content(self::application()->index()));
-        $monthLinks = $crawler->filter('dialog[data-panel="months"] a[data-calendar-route]');
+        $monthLinks = $crawler->filter('#months-dialog[popover="auto"] a[data-calendar-route]');
 
         self::assertCount(12, $monthLinks);
         self::assertSame('/#d2026_1', $monthLinks->first()->attr('href'));
@@ -70,7 +70,7 @@ final class ControllerTest extends TestCase
     public function testIndexUsesInjectedCurrentDate(string $now, int $year, int $month, int $days): void
     {
         $crawler = Html::crawler(self::content(self::application($now)->index()));
-        $dialog = $crawler->filter('dialog[data-panel="months"]');
+        $dialog = $crawler->filter('#months-dialog[popover="auto"]');
         $monthLinks = $dialog->filter('a[data-calendar-route]');
 
         self::assertCount(12, $monthLinks);
@@ -98,13 +98,14 @@ final class ControllerTest extends TestCase
 
     public function testCalendarResponseHasSemanticDomContract(): void
     {
-        $request = Request::create('/handler.php', 'POST', ['month' => '3', 'year' => '2010']);
+        $request = Request::create('/handler.php', 'GET', ['month' => '3', 'year' => '2010']);
         $response = self::application()->calendar($request);
         $html = self::content($response);
         $crawler = Html::crawler($html);
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame('text/html; charset=utf-8', $response->headers->get('Content-Type'));
+        self::assertStringContainsString('no-store', $response->headers->get('Cache-Control') ?? '');
         self::assertCount(1, $crawler->filter('section[data-calendar-view][data-month="3"][data-year="2010"]'));
         self::assertCount(1, $crawler->filter('table.calendar[aria-label="March 2010"] > tbody'));
         self::assertCount(7, $crawler->filter('table.calendar > thead > tr.visually-hidden th[scope="col"]'));
@@ -130,7 +131,7 @@ final class ControllerTest extends TestCase
     public function testCalendarVisibleTextIsUnchanged(): void
     {
         $response = self::application()->calendar(
-            Request::create('/handler.php', 'POST', ['month' => '3', 'year' => '2010']),
+            Request::create('/handler.php', 'GET', ['month' => '3', 'year' => '2010']),
         );
 
         self::assertSame(
@@ -141,30 +142,55 @@ final class ControllerTest extends TestCase
 
     /** @param array<string, mixed> $parameters */
     #[DataProvider('invalidRequests')]
-    public function testInvalidCalendarRequestReturnsExactError(array $parameters, string $method): void
+    public function testInvalidCalendarRequestReturnsExactError(array $parameters): void
     {
-        $request = Request::create('/handler.php', $method, $parameters);
+        $request = Request::create('/handler.php', 'GET', $parameters);
         $response = self::application()->calendar($request);
 
         self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
         self::assertSame('text/html; charset=utf-8', $response->headers->get('Content-Type'));
+        self::assertStringContainsString('no-store', $response->headers->get('Cache-Control') ?? '');
         self::assertSame('Invalid calendar date.', self::content($response));
     }
 
-    /** @return iterable<string, array{array<string, mixed>, string}> */
+    /** @return iterable<string, array{array<string, mixed>}> */
     public static function invalidRequests(): iterable
     {
-        yield 'GET without parameters stays 400' => [[], 'GET'];
-        yield 'POST without parameters' => [[], 'POST'];
-        yield 'string value' => [['month' => 'March', 'year' => '2010'], 'POST'];
-        yield 'array value' => [['month' => ['3'], 'year' => '2010'], 'POST'];
-        yield 'month out of range' => [['month' => '13', 'year' => '2010'], 'POST'];
-        yield 'year out of range' => [['month' => '3', 'year' => '10000'], 'POST'];
+        yield 'missing parameters' => [[]];
+        yield 'string value' => [['month' => 'March', 'year' => '2010']];
+        yield 'array value' => [['month' => ['3'], 'year' => '2010']];
+        yield 'month out of range' => [['month' => '13', 'year' => '2010']];
+        yield 'year out of range' => [['month' => '3', 'year' => '10000']];
+    }
+
+    #[DataProvider('unsupportedMethods')]
+    public function testCalendarRejectsNonGetMethods(string $method): void
+    {
+        $response = self::application()->calendar(
+            Request::create('/handler.php', $method, ['month' => '3', 'year' => '2010']),
+        );
+
+        self::assertSame(Response::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
+        self::assertSame('GET', $response->headers->get('Allow'));
+        self::assertStringContainsString('no-store', $response->headers->get('Cache-Control') ?? '');
+        self::assertSame('text/plain; charset=utf-8', $response->headers->get('Content-Type'));
+        self::assertSame('Method Not Allowed.', self::content($response));
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function unsupportedMethods(): iterable
+    {
+        yield 'HEAD' => ['HEAD'];
+        yield 'POST' => ['POST'];
+        yield 'PUT' => ['PUT'];
+        yield 'PATCH' => ['PATCH'];
+        yield 'DELETE' => ['DELETE'];
+        yield 'OPTIONS' => ['OPTIONS'];
     }
 
     private static function application(string $now = '2026-07-21T12:00:00+00:00'): \Calendorama\Application
     {
-        return ApplicationFactory::create(dirname(__DIR__), new MockClock($now));
+        return ApplicationFactory::create(dirname(__DIR__), new DateTimeImmutable($now));
     }
 
     private static function content(Response $response): string

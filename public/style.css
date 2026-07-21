@@ -69,6 +69,7 @@ body {
 	width: 100%;
 }
 .site-shell {
+	anchor-name:--site-shell;
 	overflow:hidden;
 	width:708px;
 	background:#efefef;
@@ -245,17 +246,31 @@ h3 {
 
 /* panels */
 .panel-dialog {
-	position:absolute;
+	position:fixed;
+	position-anchor:--site-shell;
 	top:auto;
 	left:auto;
-	right:40px;
-	bottom:40px;
+	right:calc(anchor(right) + 40px);
+	bottom:calc(anchor(bottom) + 40px);
 	padding:10px;
 	background:#efefef;
 	border:1px solid #ccc;
 	width:170px;
 	margin:0;
 	color:inherit;
+	opacity:0;
+	transition:
+		opacity 400ms linear,
+		display 400ms allow-discrete,
+		overlay 400ms allow-discrete;
+}
+.panel-dialog:popover-open {
+	opacity:1;
+}
+@starting-style {
+	.panel-dialog:popover-open {
+		opacity:0;
+	}
 }
 .panel-dialog p {
 	margin-bottom:.8em;
@@ -264,7 +279,7 @@ h3 {
 /*authors block*/
 .authors-panel {
 	width:672px;
-	bottom:30px;
+	bottom:calc(anchor(bottom) + 30px);
 }
 .authors-panel dd,
 .authors-panel dt {
@@ -303,6 +318,11 @@ h3 {
 	width:110px;
 	line-height:1.6;
 	bottom:auto;
-	top:80px;
+	top:calc(anchor(top) + 80px);
 	color:#aaa;
+}
+@media (prefers-reduced-motion: reduce) {
+	.panel-dialog {
+		transition:none;
+	}
 }

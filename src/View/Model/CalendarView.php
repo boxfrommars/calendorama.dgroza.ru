@@ -13,7 +13,11 @@ final readonly class CalendarView
         public int $month,
         public int $year,
         public array $weeks,
-        public MonthNavigationView $navigation,
+        public string $monthName,
+        public ?string $previousTitle,
+        public ?string $previousRoute,
+        public ?string $nextTitle,
+        public ?string $nextRoute,
     ) {
     }
 }

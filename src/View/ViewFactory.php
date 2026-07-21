@@ -6,44 +6,65 @@ namespace Calendorama\View;
 
 use Calendorama\Calendar\CalendarArchive;
 use Calendorama\Calendar\CalendarMonth;
+use Calendorama\View\Model\ArchiveMonthView;
 use Calendorama\View\Model\CalendarCellView;
 use Calendorama\View\Model\CalendarPostView;
 use Calendorama\View\Model\CalendarView;
-use Calendorama\View\Model\MonthLinkView;
-use Calendorama\View\Model\MonthNavigationView;
-use Psr\Clock\ClockInterface;
+use Calendorama\View\Model\IndexView;
+use DateTimeImmutable;
 
-final readonly class CalendarViewFactory
+final readonly class ViewFactory
 {
     private const WEEKS = 6;
 
     public function __construct(
         private CalendarArchive $archive,
-        private ClockInterface $clock,
+        private DateTimeImmutable $now,
+        private AssetUrlGenerator $assets,
     ) {
     }
 
-    public function create(CalendarMonth $month): CalendarView
+    public function index(): IndexView
+    {
+        $year = (int) $this->now->format('Y');
+        $month = (int) $this->now->format('n');
+        $postCounts = $this->archive->postCountsByMonth();
+        $months = [];
+
+        foreach ($postCounts as $monthNumber => $postCount) {
+            $route = self::monthRoute($year, $monthNumber);
+            $months[] = new ArchiveMonthView(
+                (new CalendarMonth($monthNumber, $year))->name,
+                $postCount,
+                $route,
+            );
+        }
+
+        return new IndexView(
+            self::monthRoute($year, $month),
+            365 + (int) $this->now->format('L'),
+            array_sum($postCounts),
+            $months,
+            $this->assets->versioned('/style.css'),
+            $this->assets->versioned('/script.js'),
+        );
+    }
+
+    public function calendar(CalendarMonth $month): CalendarView
     {
         $today = $this->todayIn($month);
+        $previous = $month->previous();
+        $next = $month->next();
 
         return new CalendarView(
             $month->month,
             $month->year,
             $this->weeks($month, $today),
-            new MonthNavigationView(
-                $month->name,
-                self::navigationLink(
-                    $month->previousMonthName,
-                    $month->previousMonth,
-                    $month->previousYear,
-                ),
-                self::navigationLink(
-                    $month->nextMonthName,
-                    $month->nextMonth,
-                    $month->nextYear,
-                ),
-            ),
+            $month->name,
+            $previous === null ? null : $previous->name . ' ' . $previous->year,
+            $previous === null ? null : self::monthRoute($previous->year, $previous->month),
+            $next === null ? null : $next->name . ' ' . $next->year,
+            $next === null ? null : self::monthRoute($next->year, $next->month),
         );
     }
 
@@ -73,7 +94,6 @@ final readonly class CalendarViewFactory
 
         $day = $cellNumber - $month->firstWeekday + 1;
         $post = $this->archive->post($month->month, $day);
-
         $postView = $post === null ? null : new CalendarPostView(
             '#d' . $month->year . '_' . $month->month . '_' . $day,
             $post->title,
@@ -87,20 +107,15 @@ final readonly class CalendarViewFactory
 
     private function todayIn(CalendarMonth $month): ?int
     {
-        $today = $this->clock->now();
-
-        if ($month->month !== (int) $today->format('n') || $month->year !== (int) $today->format('Y')) {
+        if ($month->month !== (int) $this->now->format('n') || $month->year !== (int) $this->now->format('Y')) {
             return null;
         }
 
-        return (int) $today->format('j');
+        return (int) $this->now->format('j');
     }
 
-    private static function navigationLink(string $monthName, int $month, int $year): MonthLinkView
+    private static function monthRoute(int $year, int $month): string
     {
-        return new MonthLinkView(
-            $monthName . ' ' . $year,
-            $year >= 1 && $year <= 9999 ? '/#d' . $year . '_' . $month : null,
-        );
+        return '#d' . $year . '_' . $month;
     }
 }

@@ -18,11 +18,11 @@ production-операцией.
 | --- | --- |
 | `vendor-prod` | Composer runtime dependencies с `--no-dev`. |
 | `vendor-dev` | Runtime и dev dependencies для PHP-проверок. |
-| `runtime` / `php` | PHP 8.3 FPM, `ext-calendar`, production vendor; без Node. |
+| `runtime` / `php` | PHP 8.3 FPM и production vendor; без дополнительных PHP extensions и Node. |
 | `test` / `tests` | PHPUnit, PHPStan, Composer и исходники тестов. |
 | `web` | Локальный Nginx перед PHP-FPM, с production-подобными ограничениями. |
 | `smoke` | HTTP-матрица против здорового `web`. |
-| `browser-test` / `e2e` | Зафиксированный Playwright/Chromium; только для тестов. |
+| `browser-test` / `e2e` | Зафиксированный Playwright с Chromium, Firefox и WebKit; только для тестов. |
 
 Исходники монтируются read-only. Отдельный anonymous volume `/var/www/html/vendor`
 не даёт host mount скрыть зависимости, собранные в PHP-образе. Healthcheck
@@ -58,14 +58,16 @@ docker compose up -d
 | Набор | Основные гарантии |
 | --- | --- |
 | PHPUnit domain/content | Параметры, календарная математика, manifest, counts, image pairs, titles. |
-| PHPUnit view/controller | Frozen clock, readonly view-model, Twig strict/autoescape, DOM и точные HTTP ошибки. |
+| PHPUnit view/Application | Фиксированный снимок времени, readonly view-model, Twig strict/autoescape, DOM и точные HTTP ошибки. |
 | RSS test | Валидность, HTTPS-ссылки и стабильность legacy GUID. |
 | PHPStan | Типы всего PHP-кода на level max без baseline. |
 | HTTP smoke | 200/400/404, CSP, cache headers, закрытые служебные пути. |
-| Playwright | Hash/history, dialogs/focus, tooltip, viewer, races, errors, reduced motion. |
+| Playwright | Hash/history, native popover/focus, tooltip, viewer, races, errors, reduced motion в трёх движках. |
 | Screenshots | Геометрия календаря, about panel и viewer при viewport 908 px. |
 
-Screenshot baselines находятся рядом с e2e-тестом. Обновлять их командой
+Функциональные browser-сценарии выполняются в Chromium, Firefox и WebKit;
+визуальные baselines намеренно проверяются только в Chromium. Screenshot
+baselines находятся рядом с e2e-тестом. Обновлять их командой
 `npx playwright test --update-snapshots` можно только после просмотра отличий и
 подтверждения, что визуальное изменение намеренно. Прохождение теста после
 слепого обновления baseline не является проверкой дизайна.

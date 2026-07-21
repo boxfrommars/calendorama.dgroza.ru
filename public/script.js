@@ -23,11 +23,9 @@ const state = {
     activeRequest: null,
     routeVersion: 0,
     tooltipTarget: null,
-    activeDialog: null,
     pendingCalendarFocus: null,
-    dialogOpeners: new WeakMap(),
-    dialogStates: new WeakMap(),
-    dialogVersions: new WeakMap(),
+    viewerOpener: null,
+    viewerVersion: 0,
     animations: new WeakMap(),
 };
 
@@ -69,46 +67,6 @@ async function fadeIn(element, duration = FADE_DURATION) {
     element.style.opacity = '1';
 }
 
-async function openDialog(dialog, opener = null) {
-    const version = (state.dialogVersions.get(dialog) ?? 0) + 1;
-    state.dialogVersions.set(dialog, version);
-    state.dialogStates.set(dialog, 'opening');
-    if (!dialog.open) dialog.show();
-    if (opener) state.dialogOpeners.set(dialog, opener);
-    state.activeDialog = dialog;
-    setPanelExpanded(dialog, true);
-    await animate(dialog, [{opacity: 0}, {opacity: 1}], FADE_DURATION);
-    if (!dialog.open || state.dialogVersions.get(dialog) !== version) return false;
-    dialog.style.opacity = '1';
-    state.dialogStates.set(dialog, 'open');
-    dialog.focus({preventScroll: true});
-    return true;
-}
-
-async function closeDialog(dialog, restoreFocus = true) {
-    if (!dialog.open) return false;
-    const version = (state.dialogVersions.get(dialog) ?? 0) + 1;
-    state.dialogVersions.set(dialog, version);
-    state.dialogStates.set(dialog, 'closing');
-    await animate(dialog, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
-    if (state.dialogVersions.get(dialog) !== version) return false;
-    if (dialog.open) dialog.close();
-    dialog.style.opacity = '';
-    state.dialogStates.set(dialog, 'closed');
-    setPanelExpanded(dialog, false);
-
-    const opener = state.dialogOpeners.get(dialog);
-    state.dialogOpeners.delete(dialog);
-    if (dialog === state.activeDialog) state.activeDialog = null;
-    if (restoreFocus && opener?.isConnected) opener.focus({preventScroll: true});
-    return true;
-}
-
-function setPanelExpanded(dialog, expanded) {
-    if (!dialog.id || !dialog.dataset.panel) return;
-    document.querySelector(`[aria-controls="${dialog.id}"]`)?.setAttribute('aria-expanded', String(expanded));
-}
-
 function hideTooltip() {
     elements.tooltip.hidden = true;
     elements.tooltip.style.opacity = '';
@@ -116,10 +74,14 @@ function hideTooltip() {
 }
 
 async function clean() {
-    const dialogs = document.querySelectorAll('dialog[open]');
-    await Promise.all(Array.from(dialogs, (dialog) => closeDialog(dialog, false)));
+    hidePanels();
+    await closePostView(false, false);
     hideInfo();
     hideTooltip();
+}
+
+function hidePanels() {
+    document.querySelectorAll('.panel-dialog:popover-open').forEach((panel) => panel.hidePopover());
 }
 
 function hideInfo() {
@@ -179,10 +141,10 @@ async function loadCalendar(date) {
     showInfo(INFO.loading);
 
     try {
-        const response = await fetch('/handler.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
-            body: new URLSearchParams({month: String(date.month), year: String(date.year)}),
+        const url = new URL('/handler.php', window.location.origin);
+        url.search = new URLSearchParams({month: String(date.month), year: String(date.year)});
+        const response = await fetch(url, {
+            cache: 'no-store',
             signal: request.signal,
         });
         if (!response.ok) throw new Error(`Calendar request failed with HTTP ${response.status}`);
@@ -207,13 +169,22 @@ function prepareFullImage() {
 }
 
 async function showFullImage(opener, version) {
-    if (state.activeDialog && state.activeDialog !== elements.postView) {
-        await closeDialog(state.activeDialog, false);
-    }
+    hidePanels();
     if (version !== state.routeVersion) return;
     Object.assign(elements.postView.style, {height: 'auto', width: 'auto', overflow: 'visible', padding: ''});
     hideInfo();
-    await openDialog(elements.postView, opener);
+    await openPostView(opener);
+}
+
+async function openPostView(opener) {
+    const version = ++state.viewerVersion;
+    state.viewerOpener = opener;
+    if (!elements.postView.open) elements.postView.show();
+    await animate(elements.postView, [{opacity: 0}, {opacity: 1}], FADE_DURATION);
+    if (!elements.postView.open || state.viewerVersion !== version) return false;
+    elements.postView.style.opacity = '1';
+    elements.postView.focus({preventScroll: true});
+    return true;
 }
 
 function leaveDayRoute() {
@@ -227,16 +198,23 @@ function leaveDayRoute() {
 }
 
 async function closePostView(restoreFocus = true, updateRoute = true) {
-    const closed = await closeDialog(elements.postView, restoreFocus);
-    if (closed && updateRoute) leaveDayRoute();
-    return closed;
+    if (!elements.postView.open) return false;
+    const version = ++state.viewerVersion;
+    await animate(elements.postView, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
+    if (state.viewerVersion !== version) return false;
+    if (elements.postView.open) elements.postView.close();
+    elements.postView.style.opacity = '';
+
+    const opener = state.viewerOpener;
+    state.viewerOpener = null;
+    if (restoreFocus && opener?.isConnected) opener.focus({preventScroll: true});
+    if (updateRoute) leaveDayRoute();
+    return true;
 }
 
 async function viewFull(date, version) {
     showInfo(INFO.loading);
-    if (state.activeDialog && state.activeDialog !== elements.postView) {
-        await closeDialog(state.activeDialog, false);
-    }
+    hidePanels();
     await closePostView(false, false);
     if (version !== state.routeVersion) return;
 
@@ -285,25 +263,6 @@ async function handleHash() {
     }
 }
 
-async function openPanel(name, opener) {
-    const panel = document.querySelector(`[data-panel="${name}"]`);
-    if (!(panel instanceof HTMLDialogElement)) return;
-    if (panel.open && state.dialogStates.get(panel) !== 'closing') {
-        await closeDialog(panel);
-        return;
-    }
-
-    if (state.activeDialog && state.activeDialog !== panel) {
-        if (state.activeDialog === elements.postView) await closePostView(false, true);
-        else await closeDialog(state.activeDialog, false);
-    }
-    if (state.calendarDate?.day !== null) {
-        leaveDayRoute();
-        hideInfo();
-    }
-    await openDialog(panel, opener);
-}
-
 function routeFromAnchor(anchor) {
     return parseHash(anchor.dataset.calendarRoute ?? anchor.hash);
 }
@@ -313,6 +272,12 @@ function navigate(date, focusDirection = null) {
     state.pendingCalendarFocus = focusDirection ? {direction: focusDirection, hash} : null;
     if (window.location.hash === hash) handleHash();
     else window.location.hash = hash;
+}
+
+async function activateCalendarRoute(anchor, focusDirection = null) {
+    const date = routeFromAnchor(anchor);
+    if (elements.postView.open) await closePostView(false, false);
+    if (date) navigate(date, focusDirection);
 }
 
 function tooltipTarget(target) {
@@ -363,40 +328,46 @@ document.addEventListener('click', async (event) => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
 
-    const panelButton = target.closest('button[data-panel-target]');
-    if (panelButton) {
-        await openPanel(panelButton.dataset.panelTarget, panelButton);
-        return;
+    const panelButton = target.closest('button[popovertarget]');
+    if (panelButton && state.calendarDate?.day !== null) {
+        if (elements.postView.open) {
+            event.preventDefault();
+            await closePostView(false, true);
+            const panelId = panelButton.getAttribute('popovertarget');
+            const panel = panelId === null ? null : document.getElementById(panelId);
+            if (panel?.matches('[popover]')) panel.showPopover();
+            return;
+        }
+        leaveDayRoute();
+        hideInfo();
     }
 
     const anchor = target.closest('a[data-calendar-route]');
     if (anchor) {
         event.preventDefault();
-        const date = routeFromAnchor(anchor);
-        const activeDialog = state.activeDialog;
-        if (activeDialog?.open) {
-            const restoreFocus = activeDialog.contains(anchor);
-            if (activeDialog === elements.postView) await closePostView(false, false);
-            else await closeDialog(activeDialog, restoreFocus);
-        }
         const focusDirection = event.detail === 0 ? anchor.dataset.calendarDirection ?? null : null;
-        if (date) navigate(date, focusDirection);
+        await activateCalendarRoute(anchor, focusDirection);
         return;
     }
 
-    const dialog = state.activeDialog;
-    if (!dialog?.open || dialog.contains(target)) return;
-    if (dialog === elements.postView) await closePostView(false, true);
-    else await closeDialog(dialog, false);
+    if (elements.postView.open && !elements.postView.contains(target)) {
+        await closePostView(false, true);
+    }
 });
 
 document.addEventListener('keydown', async (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const arrow = target?.closest('a[data-calendar-route][data-calendar-direction]');
+    if (event.key === 'Enter' && arrow) {
+        event.preventDefault();
+        await activateCalendarRoute(arrow, arrow.dataset.calendarDirection ?? null);
+        return;
+    }
+
     if (event.key !== 'Escape') return;
-    const dialog = state.activeDialog;
-    if (!dialog?.open) return;
+    if (!elements.postView.open) return;
     event.preventDefault();
-    if (dialog === elements.postView) await closePostView(true, true);
-    else await closeDialog(dialog);
+    await closePostView(true, true);
 });
 
 window.addEventListener('hashchange', handleHash);

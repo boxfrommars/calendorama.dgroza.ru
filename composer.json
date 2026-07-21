@@ -5,8 +5,6 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
-        "ext-calendar": "*",
-        "symfony/clock": "^7.4",
         "symfony/http-foundation": "^7.4",
         "twig/twig": "^3.28"
     },

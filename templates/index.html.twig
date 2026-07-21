@@ -15,8 +15,8 @@
 		<nav class="site-navigation" aria-label="Основная навигация">
 			<ul>
 				<li><a href="/rss.xml" class="rss-link" data-tooltip="подписаться на rss">rss</a></li>
-				<li><button type="button" class="link-button" data-panel-target="authors" data-tooltip="авторы картинок" aria-controls="authors-dialog" aria-expanded="false">authors</button></li>
-				<li><button type="button" class="link-button" data-panel-target="months" data-tooltip="перейти к месяцу" aria-controls="months-dialog" aria-expanded="false">monthes</button></li>
+				<li><button type="button" class="link-button" popovertarget="authors-dialog" data-tooltip="авторы картинок">authors</button></li>
+				<li><button type="button" class="link-button" popovertarget="months-dialog" data-tooltip="перейти к месяцу">monthes</button></li>
 			</ul>
 		</nav>
 	</header>
@@ -30,20 +30,20 @@
 			<img alt="">
 		</dialog>
 	</main>
-	<footer class="site-footer">dmitry groza<br>nadja gimmer<br>in incredible <b><button type="button" class="link-button" data-panel-target="about" data-tooltip="о проекте" aria-controls="about-dialog" aria-expanded="false">calendorama project!</button></b></footer>
+	<footer class="site-footer">dmitry groza<br>nadja gimmer<br>in incredible <b><button type="button" class="link-button" popovertarget="about-dialog" data-tooltip="о проекте">calendorama project!</button></b></footer>
 	<!-- надя гиммер, вы прекрасны :–) -->
 
-	<dialog id="months-dialog" class="panel-dialog month-list-panel" data-panel="months" aria-labelledby="months-dialog-title" tabindex="-1">
+	<dialog id="months-dialog" class="panel-dialog month-list-panel" popover="auto" aria-labelledby="months-dialog-title">
 		<h2 id="months-dialog-title" class="visually-hidden">Месяцы</h2>
 		<ul>
 		{% for month in view.months %}
-			<li><a href="{{ month.href }}" data-calendar-route="{{ month.route }}" data-tooltip="{{ month.name }}">{{ month.name }}</a> ({{ month.postCount }})</li>
+			<li><a href="/{{ month.route }}" data-calendar-route="{{ month.route }}" data-tooltip="{{ month.name }}">{{ month.name }}</a> ({{ month.postCount }})</li>
 		{% endfor %}
 			<li>total ({{ view.postCount }}/{{ view.daysInYear }})</li>
 		</ul>
 	</dialog>
 
-	<dialog id="about-dialog" class="panel-dialog about-panel" data-panel="about" aria-labelledby="about-dialog-title" tabindex="-1">
+	<dialog id="about-dialog" class="panel-dialog about-panel" popover="auto" aria-labelledby="about-dialog-title">
 		<h3 id="about-dialog-title">проект <i>календорама!</i></h3>
 		<p>это простой блог-календарь с&nbsp;картинками-записями.</p>
 		<p><b>идея и&nbsp;дизайн (или его отсутствие):</b> надя гиммер</p>
@@ -52,7 +52,7 @@
 		<p>boxfrommars@gmail.com</p>
 	</dialog>
 
-	<dialog id="authors-dialog" class="panel-dialog authors-panel" data-panel="authors" aria-labelledby="authors-dialog-title" tabindex="-1">
+	<dialog id="authors-dialog" class="panel-dialog authors-panel" popover="auto" aria-labelledby="authors-dialog-title">
 		<h3 id="authors-dialog-title">авторы картинок</h3>
 		<dl class="authors-column">
 			<div class="author-entry"><dt>юра (юрек)</dt><dd><a href="http://vkontakte.ru/id12733421" data-tooltip="Юрий Лебедев">vkontakte</a></dd></div>

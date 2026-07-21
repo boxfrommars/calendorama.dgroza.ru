@@ -10,8 +10,7 @@ RUN composer install \
     --prefer-dist \
     --no-interaction \
     --no-progress \
-    --optimize-autoloader \
-    --ignore-platform-req=ext-calendar
+    --optimize-autoloader
 
 FROM composer-base AS vendor-prod
 
@@ -20,12 +19,9 @@ RUN composer install \
     --prefer-dist \
     --no-interaction \
     --no-progress \
-    --optimize-autoloader \
-    --ignore-platform-req=ext-calendar
+    --optimize-autoloader
 
 FROM php:8.3-fpm-alpine AS php-base
-
-RUN docker-php-ext-install calendar
 
 WORKDIR /var/www/html
 

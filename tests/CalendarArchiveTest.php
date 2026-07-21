@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Calendorama\Tests;
 
-use Calendorama\Calendar\ArchiveMonth;
 use Calendorama\Calendar\CalendarArchive;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -25,16 +24,13 @@ final class CalendarArchiveTest extends TestCase
         self::assertNull($archive->post(3, 2));
     }
 
-    public function testBuildsSummaryFromManifest(): void
+    public function testBuildsPostCountsFromManifest(): void
     {
-        $summary = self::projectArchive()->summary();
+        $counts = self::projectArchive()->postCountsByMonth();
 
-        self::assertCount(12, $summary->months);
-        self::assertSame(53, $summary->postCount);
-        self::assertSame(
-            [5, 2, 27, 5, 2, 2, 1, 2, 1, 0, 2, 4],
-            array_map(static fn (ArchiveMonth $month): int => $month->postCount, $summary->months),
-        );
+        self::assertCount(12, $counts);
+        self::assertSame(53, array_sum($counts));
+        self::assertSame([5, 2, 27, 5, 2, 2, 1, 2, 1, 0, 2, 4], array_values($counts));
     }
 
     public function testLoadsManifestOnlyOncePerArchiveInstance(): void
@@ -49,7 +45,7 @@ final class CalendarArchiveTest extends TestCase
         try {
             self::assertNotNull($archive->post(3, 1));
             self::assertTrue(unlink($file));
-            self::assertSame(1, $archive->summary()->postCount);
+            self::assertSame(1, array_sum($archive->postCountsByMonth()));
         } finally {
             @unlink($file);
         }
@@ -62,7 +58,7 @@ final class CalendarArchiveTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unable to read archive manifest');
 
-        (new CalendarArchive($file))->summary();
+        (new CalendarArchive($file))->postCountsByMonth();
     }
 
     public function testRejectsMalformedJson(): void
@@ -73,7 +69,7 @@ final class CalendarArchiveTest extends TestCase
             $this->expectException(UnexpectedValueException::class);
             $this->expectExceptionMessage('Invalid archive manifest');
 
-            (new CalendarArchive($file))->summary();
+            (new CalendarArchive($file))->postCountsByMonth();
         } finally {
             @unlink($file);
         }
@@ -87,7 +83,7 @@ final class CalendarArchiveTest extends TestCase
             $this->expectException(UnexpectedValueException::class);
             $this->expectExceptionMessage('expected a JSON array');
 
-            (new CalendarArchive($file))->summary();
+            (new CalendarArchive($file))->postCountsByMonth();
         } finally {
             @unlink($file);
         }
@@ -104,7 +100,7 @@ final class CalendarArchiveTest extends TestCase
             $this->expectException(UnexpectedValueException::class);
             $this->expectExceptionMessage($message);
 
-            (new CalendarArchive($file))->summary();
+            (new CalendarArchive($file))->postCountsByMonth();
         } finally {
             @unlink($file);
         }

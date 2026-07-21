@@ -51,31 +51,30 @@ test('panels toggle, replace one another and close only from outside or Escape',
     const assertNoErrors = pageErrors(page);
     await openCalendar(page);
 
-    const authorsButton = page.locator('button[data-panel-target="authors"]');
+    const authorsButton = page.locator('button[popovertarget="authors-dialog"]');
     const authors = page.locator('#authors-dialog');
     await authorsButton.click();
-    await expect(authors).toHaveJSProperty('open', true);
-    await expect(authorsButton).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#authors-dialog:popover-open')).toBeVisible();
     await authors.locator('h3').click();
-    await expect(authors).toHaveJSProperty('open', true);
+    await expect(page.locator('#authors-dialog:popover-open')).toBeVisible();
 
     await page.keyboard.press('Escape');
-    await expect(authors).not.toHaveAttribute('open', '');
+    await expect(page.locator('#authors-dialog:popover-open')).toHaveCount(0);
     await expect(authorsButton).toBeFocused();
 
-    const aboutButton = page.locator('button[data-panel-target="about"]');
+    const aboutButton = page.locator('button[popovertarget="about-dialog"]');
     await aboutButton.click();
     await authorsButton.click();
-    await expect(page.locator('#about-dialog')).not.toHaveAttribute('open', '');
-    await expect(authors).toHaveJSProperty('open', true);
+    await expect(page.locator('#about-dialog:popover-open')).toHaveCount(0);
+    await expect(page.locator('#authors-dialog:popover-open')).toBeVisible();
 
     await authorsButton.click();
-    await expect(authors).not.toHaveAttribute('open', '');
+    await expect(page.locator('#authors-dialog:popover-open')).toHaveCount(0);
     await expect(authorsButton).toBeFocused();
 
     await authorsButton.click();
     await page.locator('h1').click();
-    await expect(authors).not.toHaveAttribute('open', '');
+    await expect(page.locator('#authors-dialog:popover-open')).toHaveCount(0);
     assertNoErrors();
 });
 
@@ -118,8 +117,8 @@ test('a missing full-size image reports an error without opening the viewer', as
 
 test('an obsolete slow request cannot replace the latest calendar', async ({page}) => {
     const assertNoErrors = pageErrors(page);
-    await page.route('**/handler.php', async (route) => {
-        const parameters = new URLSearchParams(route.request().postData() ?? '');
+    await page.route(/\/handler\.php\?/, async (route) => {
+        const parameters = new URL(route.request().url()).searchParams;
         if (parameters.get('month') === '4') {
             await new Promise((resolve) => setTimeout(resolve, 500));
         }
@@ -145,8 +144,8 @@ test('an obsolete slow request cannot replace the latest calendar', async ({page
 test('request errors preserve the old calendar and reduced motion skips animations', async ({page}) => {
     const assertNoErrors = pageErrors(page, [/status of 500/]);
     await page.emulateMedia({reducedMotion: 'reduce'});
-    await page.route('**/handler.php', async (route) => {
-        const parameters = new URLSearchParams(route.request().postData() ?? '');
+    await page.route(/\/handler\.php\?/, async (route) => {
+        const parameters = new URL(route.request().url()).searchParams;
         if (parameters.get('month') === '4') {
             await route.fulfill({status: 500, contentType: 'text/plain', body: 'failure'});
         } else {
@@ -164,14 +163,15 @@ test('request errors preserve the old calendar and reduced motion skips animatio
     assertNoErrors();
 });
 
-test('fixed calendar, panel and viewer match visual baselines', async ({page}) => {
+test('fixed calendar, panel and viewer match visual baselines', async ({page, browserName}) => {
+    test.skip(browserName !== 'chromium', 'Visual baselines are intentionally Chromium-only.');
     const assertNoErrors = pageErrors(page);
     await page.emulateMedia({reducedMotion: 'reduce'});
     await openCalendar(page);
     await expect(page).toHaveScreenshot('calendar-march-2010.png', {fullPage: true});
 
-    await page.locator('button[data-panel-target="about"]').click();
-    await expect(page.locator('#about-dialog')).toHaveJSProperty('open', true);
+    await page.locator('button[popovertarget="about-dialog"]').click();
+    await expect(page.locator('#about-dialog:popover-open')).toBeVisible();
     await expect(page).toHaveScreenshot('about-panel.png', {fullPage: true});
 
     await page.keyboard.press('Escape');

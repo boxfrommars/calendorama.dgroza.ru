@@ -13,8 +13,6 @@ final class CalendarArchive
     /** @var array<int, array<int, CalendarPost>>|null */
     private ?array $posts = null;
 
-    private ?ArchiveSummary $summary = null;
-
     public function __construct(
         private readonly string $manifestFile,
         private readonly string $webPath = 'blog',
@@ -26,23 +24,15 @@ final class CalendarArchive
         return $this->posts()[$month][$day] ?? null;
     }
 
-    public function summary(): ArchiveSummary
+    /** @return array<int, int> Counts indexed by month 1..12. */
+    public function postCountsByMonth(): array
     {
-        if ($this->summary !== null) {
-            return $this->summary;
-        }
-
         $counts = array_fill(1, 12, 0);
         foreach ($this->posts() as $month => $posts) {
             $counts[$month] = count($posts);
         }
 
-        $months = [];
-        foreach ($counts as $month => $postCount) {
-            $months[] = new ArchiveMonth($month, $postCount);
-        }
-
-        return $this->summary = new ArchiveSummary($months, array_sum($counts));
+        return $counts;
     }
 
     /** @return array<int, array<int, CalendarPost>> */
@@ -95,7 +85,7 @@ final class CalendarArchive
             if (
                 !is_int($day)
                 || $day < 1
-                || $day > cal_days_in_month(CAL_GREGORIAN, $month, 2000)
+                || $day > (new CalendarMonth($month, 2000))->daysInMonth
             ) {
                 $this->invalidRecord($index, 'day must be valid for the recurring calendar month');
             }

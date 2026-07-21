@@ -8,6 +8,12 @@ export default defineConfig({
     timeout: 15_000,
     outputDir: '/tmp/playwright-results',
     reporter: 'line',
+    snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{arg}-{platform}{ext}',
+    projects: [
+        {name: 'chromium', use: {browserName: 'chromium'}},
+        {name: 'firefox', use: {browserName: 'firefox'}},
+        {name: 'webkit', use: {browserName: 'webkit'}},
+    ],
     expect: {
         timeout: 5_000,
         toHaveScreenshot: {
@@ -17,7 +23,6 @@ export default defineConfig({
     },
     use: {
         baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'http://web',
-        browserName: 'chromium',
         colorScheme: 'light',
         locale: 'en-US',
         reducedMotion: 'no-preference',

@@ -8,8 +8,6 @@ final readonly class IndexView
 {
     /** @param list<ArchiveMonthView> $months */
     public function __construct(
-        public int $currentYear,
-        public int $currentMonth,
         public string $initialRoute,
         public int $daysInYear,
         public int $postCount,

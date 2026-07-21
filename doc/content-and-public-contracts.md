@@ -82,8 +82,9 @@ URL вычисляются по соглашению об именах. Producti
 | --- | --- | --- |
 | `/` | GET | Главная HTML-страница, 200. |
 | `/index.php` | GET | Та же главная страница, 200. |
-| `/handler.php` | POST `month=1..12`, `year=1..9999` | HTML `<section>` календаря, 200. |
-| `/handler.php` | Нет или некорректные POST-параметры | `Invalid calendar date.`, 400. |
+| `/handler.php` | GET `month=1..12`, `year=1..9999` | HTML `<section>` календаря, 200 и `Cache-Control: no-store`. |
+| `/handler.php` | Нет или некорректные GET-параметры | `Invalid calendar date.`, 400. |
+| `/handler.php` | POST и другие методы | `Method Not Allowed.`, 405 и `Allow: GET`. |
 | `/rss.xml` | GET | Статический RSS. |
 | `/style.css`, `/script.js`, `/favicon.ico`, `/blog/*` | GET | Статические публичные файлы. |
 

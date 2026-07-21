@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Calendorama\Tests;
 
 use Calendorama\Calendar\CalendarArchive;
+use Calendorama\Calendar\CalendarMonth;
 use PHPUnit\Framework\TestCase;
 
 final class ContentIntegrityTest extends TestCase
@@ -15,7 +16,7 @@ final class ContentIntegrityTest extends TestCase
         $blog = $root . '/public/blog';
         $manifest = $root . '/content/archive.json';
         $records = self::records($manifest);
-        self::assertSame(53, (new CalendarArchive($manifest))->summary()->postCount);
+        self::assertSame(53, array_sum((new CalendarArchive($manifest))->postCountsByMonth()));
 
         /** @var array<string, true> $published */
         $published = [];
@@ -66,7 +67,10 @@ final class ContentIntegrityTest extends TestCase
 
         sort($variantThumbnails);
         self::assertSame(['3_28_thmb_1.jpg'], $variantThumbnails);
-        self::assertSame(53, (new CalendarArchive(dirname(__DIR__) . '/content/archive.json'))->summary()->postCount);
+        self::assertSame(
+            53,
+            array_sum((new CalendarArchive(dirname(__DIR__) . '/content/archive.json'))->postCountsByMonth()),
+        );
     }
 
     public function testLegacyTitleFilesAreRemoved(): void
@@ -87,7 +91,7 @@ final class ContentIntegrityTest extends TestCase
             self::assertSame(1, $matched, 'Non-canonical image name: ' . basename($image));
             $month = (int) $match[1];
             $day = (int) $match[2];
-            self::assertLessThanOrEqual(cal_days_in_month(CAL_GREGORIAN, $month, 2000), $day);
+            self::assertLessThanOrEqual((new CalendarMonth($month, 2000))->daysInMonth, $day);
             self::assertArrayHasKey($month . '_' . $day, $published);
             $count++;
         }

@@ -1,11 +1,44 @@
 <section data-calendar-view data-month="{{ calendar.month }}" data-year="{{ calendar.year }}">
-	<table class="calendar" aria-label="{{ calendar.navigation.monthName }} {{ calendar.year }}">
-		<thead><tr class="visually-hidden"><th scope="col">Понедельник</th><th scope="col">Вторник</th><th scope="col">Среда</th><th scope="col">Четверг</th><th scope="col">Пятница</th><th scope="col">Суббота</th><th scope="col">Воскресенье</th></tr></thead>
+	<table class="calendar" aria-label="{{ calendar.monthName }} {{ calendar.year }}">
+		<thead>
+			<tr class="visually-hidden">
+				<th scope="col">Понедельник</th>
+				<th scope="col">Вторник</th>
+				<th scope="col">Среда</th>
+				<th scope="col">Четверг</th>
+				<th scope="col">Пятница</th>
+				<th scope="col">Суббота</th>
+				<th scope="col">Воскресенье</th>
+			</tr>
+		</thead>
 		<tbody>
 {% for week in calendar.weeks %}
-			<tr>{% for cell in week %}<td class="calendar-cell{% if cell.day is null %} calendar-cell--outside-month{% elseif cell.post is null %} calendar-cell--number{% endif %}"{% if cell.isToday %} aria-current="date"{% endif %}{% if cell.day is null %} aria-hidden="true"{% endif %}>{% if cell.post %}<a class="calendar-post" href="{{ cell.post.fullUrl }}" data-calendar-route="{{ cell.post.route }}" data-tooltip="{{ cell.post.title }}" aria-label="{{ cell.post.ariaLabel }}"><img alt="{{ cell.post.title }}" width="90" src="{{ cell.post.thumbnailUrl }}"></a>{% elseif cell.day is not null %}<span>{{ cell.day }}</span>{% endif %}</td>{% endfor %}</tr>
+			<tr>
+{%- for cell in week -%}
+				<td class="calendar-cell{% if cell.day is null %} calendar-cell--outside-month{% elseif cell.post is null %} calendar-cell--number{% endif %}"{% if cell.isToday %} aria-current="date"{% endif %}{% if cell.day is null %} aria-hidden="true"{% endif %}>
+{%- if cell.post -%}
+					<a class="calendar-post" href="{{ cell.post.fullUrl }}" data-calendar-route="{{ cell.post.route }}" data-tooltip="{{ cell.post.title }}" aria-label="{{ cell.post.ariaLabel }}"><img alt="{{ cell.post.title }}" width="90" src="{{ cell.post.thumbnailUrl }}"></a>
+{%- elseif cell.day is not null -%}
+					<span>{{ cell.day }}</span>
+{%- endif -%}
+				</td>
+{%- endfor -%}
+			</tr>
 {% endfor %}
 		</tbody>
 	</table>
-	<div class="month-summary"><h2>{{ calendar.navigation.monthName }}&nbsp;&nbsp;</h2><nav class="month-navigation" aria-label="Соседние месяцы">{% if calendar.navigation.previous.href %}<a href="{{ calendar.navigation.previous.href }}" data-calendar-route="{{ calendar.navigation.previous.href }}" data-calendar-direction="previous" data-tooltip="{{ calendar.navigation.previous.title }}" aria-label="{{ calendar.navigation.previous.title }}">&lt;</a>{% else %}<span class="month-navigation-disabled" role="link" aria-disabled="true" aria-label="Предыдущий месяц недоступен">&lt;</span>{% endif %}{% if calendar.navigation.next.href %}<a href="{{ calendar.navigation.next.href }}" data-calendar-route="{{ calendar.navigation.next.href }}" data-calendar-direction="next" data-tooltip="{{ calendar.navigation.next.title }}" aria-label="{{ calendar.navigation.next.title }}">&gt;</a>{% else %}<span class="month-navigation-disabled" role="link" aria-disabled="true" aria-label="Следующий месяц недоступен">&gt;</span>{% endif %}</nav></div>
+	<div class="month-summary">
+		<h2>{{ calendar.monthName }}&nbsp;&nbsp;</h2><nav class="month-navigation" aria-label="Соседние месяцы">
+{%- if calendar.previousRoute -%}
+			<a href="/{{ calendar.previousRoute }}" data-calendar-route="{{ calendar.previousRoute }}" data-calendar-direction="previous" data-tooltip="{{ calendar.previousTitle }}" aria-label="{{ calendar.previousTitle }}">&lt;</a>
+{%- else -%}
+			<span class="month-navigation-disabled" role="link" aria-disabled="true" aria-label="Предыдущий месяц недоступен">&lt;</span>
+{%- endif -%}
+{%- if calendar.nextRoute -%}
+			<a href="/{{ calendar.nextRoute }}" data-calendar-route="{{ calendar.nextRoute }}" data-calendar-direction="next" data-tooltip="{{ calendar.nextTitle }}" aria-label="{{ calendar.nextTitle }}">&gt;</a>
+{%- else -%}
+			<span class="month-navigation-disabled" role="link" aria-disabled="true" aria-label="Следующий месяц недоступен">&gt;</span>
+{%- endif %}
+		</nav>
+	</div>
 </section>
