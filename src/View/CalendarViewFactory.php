@@ -77,6 +77,7 @@ final readonly class CalendarViewFactory
         $postView = $post === null ? null : new CalendarPostView(
             '#d' . $month->year . '_' . $month->month . '_' . $day,
             $post->title,
+            sprintf('%d.%02d.%04d — %s', $day, $month->month, $month->year, $post->title),
             $post->fullUrl,
             $post->thumbnailUrl,
         );
@@ -99,7 +100,7 @@ final readonly class CalendarViewFactory
     {
         return new MonthLinkView(
             $monthName . ' ' . $year,
-            '/#d' . $year . '_' . $month,
+            $year >= 1 && $year <= 9999 ? '/#d' . $year . '_' . $month : null,
         );
     }
 }

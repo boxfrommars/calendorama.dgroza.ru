@@ -25,7 +25,10 @@ final class CalendarViewFactoryTest extends TestCase
         self::assertSame(2010, $view->year);
         self::assertSame('/#d2010_2', $view->navigation->previous->href);
         self::assertSame('/#d2010_4', $view->navigation->next->href);
-        self::assertSame('#d2010_3_1', self::day($view->weeks, 1)->post?->route);
+        $firstPost = self::day($view->weeks, 1)->post;
+        self::assertNotNull($firstPost);
+        self::assertSame('#d2010_3_1', $firstPost->route);
+        self::assertStringStartsWith('1.03.2010 — ', $firstPost->ariaLabel);
         self::assertFalse(property_exists(CalendarCellView::class, 'class'));
 
         $html = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $view]);
@@ -55,8 +58,20 @@ final class CalendarViewFactoryTest extends TestCase
             }
         }
 
-        self::assertSame('/#d0_12', $factory->create(new CalendarMonth(1, 1))->navigation->previous->href);
-        self::assertSame('/#d10000_1', $factory->create(new CalendarMonth(12, 9999))->navigation->next->href);
+        $first = $factory->create(new CalendarMonth(1, 1));
+        self::assertNull($first->navigation->previous->href);
+        self::assertSame('/#d1_2', $first->navigation->next->href);
+
+        $last = $factory->create(new CalendarMonth(12, 9999));
+        self::assertSame('/#d9999_11', $last->navigation->previous->href);
+        self::assertNull($last->navigation->next->href);
+
+        $firstHtml = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $first]);
+        $lastHtml = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $last]);
+        self::assertCount(1, Html::crawler($firstHtml)->filter('[aria-label="Предыдущий месяц недоступен"][aria-disabled="true"]'));
+        self::assertCount(1, Html::crawler($lastHtml)->filter('[aria-label="Следующий месяц недоступен"][aria-disabled="true"]'));
+        self::assertStringNotContainsString('#d0_12', $firstHtml);
+        self::assertStringNotContainsString('#d10000_1', $lastHtml);
     }
 
     public function testEscapesFileBackedTitleInTwig(): void
@@ -75,6 +90,7 @@ final class CalendarViewFactoryTest extends TestCase
 
             self::assertStringContainsString('data-tooltip="a&quot;b&lt;c&amp;d"', $html);
             self::assertStringContainsString('alt="a&quot;b&lt;c&amp;d"', $html);
+            self::assertStringContainsString('aria-label="1.03.2010 — a&quot;b&lt;c&amp;d"', $html);
         } finally {
             @unlink($directory . '/3.txt');
             @unlink($directory . '/3_1_thmb.jpg');

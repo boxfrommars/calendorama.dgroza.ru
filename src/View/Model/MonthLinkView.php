@@ -8,7 +8,7 @@ final readonly class MonthLinkView
 {
     public function __construct(
         public string $title,
-        public string $href,
+        public ?string $href,
     ) {
     }
 }

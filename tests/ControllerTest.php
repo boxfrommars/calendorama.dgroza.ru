@@ -25,20 +25,25 @@ final class ControllerTest extends TestCase
         self::assertCount(1, $crawler->filter('nav'));
         self::assertCount(1, $crawler->filter('main'));
         self::assertCount(1, $crawler->filter('footer'));
-        self::assertCount(3, $crawler->filter('button[type="button"][data-panel-target]'));
-        self::assertCount(3, $crawler->filter('dialog[data-panel][data-close-on-click]'));
+        self::assertCount(3, $crawler->filter('button[type="button"][data-panel-target][aria-controls][aria-expanded="false"]'));
+        self::assertCount(3, $crawler->filter('dialog[data-panel][aria-labelledby]'));
         self::assertCount(3, $crawler->filter('dialog.panel-dialog[data-panel]'));
         self::assertCount(0, $crawler->filter('dialog[hidden]'));
-        self::assertCount(1, $crawler->filter('dialog[data-region="post-view"][data-close-on-click] img'));
+        self::assertCount(1, $crawler->filter('dialog[data-region="post-view"][aria-labelledby] img'));
+        self::assertCount(1, $crawler->filter('#authors-dialog[aria-labelledby="authors-dialog-title"]'));
+        self::assertCount(1, $crawler->filter('#months-dialog[aria-labelledby="months-dialog-title"]'));
+        self::assertCount(1, $crawler->filter('#about-dialog[aria-labelledby="about-dialog-title"]'));
+        self::assertCount(1, $crawler->filter('[data-region="calendar-announcement"][aria-live="polite"][aria-atomic="true"]'));
         self::assertCount(1, $crawler->filter('[data-region="status"][role="status"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="alert"][role="alert"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="tooltip"][role="tooltip"][hidden]'));
-        self::assertSame('/style.css?i=4', $crawler->filter('link[rel="stylesheet"]')->attr('href'));
-        self::assertSame('/script.js?i=6', $crawler->filter('script[type="module"]')->attr('src'));
+        self::assertSame('/style.css?i=5', $crawler->filter('link[rel="stylesheet"]')->attr('href'));
+        self::assertSame('/script.js?i=7', $crawler->filter('script[type="module"]')->attr('src'));
         self::assertCount(1, $crawler->filter('script[src]'));
         self::assertStringNotContainsString('jquery', strtolower($html));
         self::assertStringNotContainsString('history.js', strtolower($html));
         self::assertStringNotContainsString('options.js', strtolower($html));
+        self::assertStringNotContainsString('data-close-on-click', $html);
     }
 
     public function testIndexRoutesAndAuthorMarkupAreExplicit(): void
@@ -78,6 +83,7 @@ final class ControllerTest extends TestCase
         self::assertSame('text/html; charset=utf-8', $response->headers->get('Content-Type'));
         self::assertCount(1, $crawler->filter('section[data-calendar-view][data-month="3"][data-year="2010"]'));
         self::assertCount(1, $crawler->filter('table.calendar[aria-label="March 2010"] > tbody'));
+        self::assertCount(7, $crawler->filter('table.calendar > thead > tr.visually-hidden th[scope="col"]'));
         self::assertCount(6, $crawler->filter('table.calendar > tbody > tr'));
         self::assertCount(42, $crawler->filter('table.calendar > tbody > tr > td'));
         self::assertGreaterThan(0, $crawler->filter('td[aria-hidden="true"]')->count());
@@ -86,10 +92,12 @@ final class ControllerTest extends TestCase
         self::assertCount(11, $crawler->filter('td.calendar-cell--outside-month'));
         self::assertCount(4, $crawler->filter('td.calendar-cell--number'));
         self::assertCount(27, $crawler->filter('a.calendar-post[data-calendar-route]'));
+        self::assertCount(27, $crawler->filter('a.calendar-post[aria-label]'));
         self::assertSame('blog/3_1_full.jpg', $crawler->filter('a[data-calendar-route="#d2010_3_1"]')->attr('href'));
+        self::assertStringStartsWith('1.03.2010 — ', $crawler->filter('a[data-calendar-route="#d2010_3_1"]')->attr('aria-label') ?? '');
         self::assertSame('90', $crawler->filter('a[data-calendar-route="#d2010_3_1"] img')->attr('width'));
         self::assertCount(1, $crawler->filter('.month-summary > h2 + nav.month-navigation'));
-        self::assertCount(2, $crawler->filter('.month-navigation a[data-calendar-route]'));
+        self::assertCount(2, $crawler->filter('.month-navigation a[data-calendar-route][data-calendar-direction]'));
         self::assertCount(0, $crawler->filter('.month-summary > h2 nav'));
         self::assertCount(0, $crawler->filter('[id], .goto, .tooltip, .w-p, .a-m-d, .view_full'));
         self::assertStringNotContainsString('cellspacing', $html);

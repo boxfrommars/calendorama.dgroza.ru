@@ -3,10 +3,10 @@
 <head>
 	<meta charset="utf-8">
 	<title>calendorama!</title>
-	<link rel="stylesheet" href="/style.css?i=4" media="screen">
+	<link rel="stylesheet" href="/style.css?i=5" media="screen">
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link rel="alternate" type="application/rss+xml" title="calendorama feed" href="/rss.xml">
-	<script type="module" src="/script.js?i=6"></script>
+	<script type="module" src="/script.js?i=7"></script>
 </head>
 <body>
 <div class="site-shell">
@@ -15,23 +15,26 @@
 		<nav class="site-navigation" aria-label="Основная навигация">
 			<ul>
 				<li><a href="/rss.xml" class="rss-link" data-tooltip="подписаться на rss">rss</a></li>
-				<li><button type="button" class="link-button" data-panel-target="authors" data-tooltip="авторы картинок">authors</button></li>
-				<li><button type="button" class="link-button" data-panel-target="months" data-tooltip="перейти к месяцу">monthes</button></li>
+				<li><button type="button" class="link-button" data-panel-target="authors" data-tooltip="авторы картинок" aria-controls="authors-dialog" aria-expanded="false">authors</button></li>
+				<li><button type="button" class="link-button" data-panel-target="months" data-tooltip="перейти к месяцу" aria-controls="months-dialog" aria-expanded="false">monthes</button></li>
 			</ul>
 		</nav>
 	</header>
 	<main>
 		<div data-region="month" aria-busy="false"></div>
+		<p class="visually-hidden" data-region="calendar-announcement" aria-live="polite" aria-atomic="true"></p>
 		<p class="status-message loading" data-region="status" role="status" hidden></p>
 		<p class="status-message loading" data-region="alert" role="alert" hidden></p>
-		<dialog class="post-view" data-region="post-view" data-close-on-click aria-label="Полноразмерное изображение" tabindex="-1">
+		<dialog id="post-view-dialog" class="post-view" data-region="post-view" aria-labelledby="post-view-title" tabindex="-1">
+			<h2 id="post-view-title" class="visually-hidden">Полноразмерное изображение</h2>
 			<img alt="">
 		</dialog>
 	</main>
-	<footer class="site-footer">dmitry groza<br>nadja gimmer<br>in incredible <b><button type="button" class="link-button" data-panel-target="about" data-tooltip="о проекте">calendorama project!</button></b></footer>
+	<footer class="site-footer">dmitry groza<br>nadja gimmer<br>in incredible <b><button type="button" class="link-button" data-panel-target="about" data-tooltip="о проекте" aria-controls="about-dialog" aria-expanded="false">calendorama project!</button></b></footer>
 	<!-- надя гиммер, вы прекрасны :–) -->
 
-	<dialog class="panel-dialog month-list-panel" data-panel="months" data-close-on-click aria-label="Месяцы" tabindex="-1">
+	<dialog id="months-dialog" class="panel-dialog month-list-panel" data-panel="months" aria-labelledby="months-dialog-title" tabindex="-1">
+		<h2 id="months-dialog-title" class="visually-hidden">Месяцы</h2>
 		<ul>
 			<li><a href="/#d2010_1" data-calendar-route="#d2010_1" data-tooltip="January">January</a> (5)</li>
 			<li><a href="/#d2010_2" data-calendar-route="#d2010_2" data-tooltip="February">February</a> (2)</li>
@@ -49,8 +52,8 @@
 		</ul>
 	</dialog>
 
-	<dialog class="panel-dialog about-panel" data-panel="about" data-close-on-click aria-label="О проекте" tabindex="-1">
-		<h3>проект <i>календорама!</i></h3>
+	<dialog id="about-dialog" class="panel-dialog about-panel" data-panel="about" aria-labelledby="about-dialog-title" tabindex="-1">
+		<h3 id="about-dialog-title">проект <i>календорама!</i></h3>
 		<p>это простой блог-календарь с&nbsp;картинками-записями.</p>
 		<p><b>идея и&nbsp;дизайн (или его отсутствие):</b> надя гиммер</p>
 		<p><b>реализация и&nbsp;наполнение:</b> ваш покорный слуга</p>
@@ -58,8 +61,8 @@
 		<p>boxfrommars@gmail.com</p>
 	</dialog>
 
-	<dialog class="panel-dialog authors-panel" data-panel="authors" data-close-on-click aria-label="Авторы картинок" tabindex="-1">
-		<h3>авторы картинок</h3>
+	<dialog id="authors-dialog" class="panel-dialog authors-panel" data-panel="authors" aria-labelledby="authors-dialog-title" tabindex="-1">
+		<h3 id="authors-dialog-title">авторы картинок</h3>
 		<dl class="authors-column">
 			<div class="author-entry"><dt>юра (юрек)</dt><dd><a href="http://vkontakte.ru/id12733421" data-tooltip="Юрий Лебедев">vkontakte</a></dd></div>
 			<div class="author-entry"><dt>кардамон</dt><dd><a href="http://fansales.livejournal.com" data-tooltip="Life Aquatic">livejournal</a></dd></div>
