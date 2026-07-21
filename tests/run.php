@@ -11,6 +11,7 @@ require __DIR__ . '/request_test.php';
 require __DIR__ . '/calendar_test.php';
 require __DIR__ . '/rendering_test.php';
 require __DIR__ . '/content_test.php';
+require __DIR__ . '/template_test.php';
 
 $failures = $runner->run();
 restore_error_handler();

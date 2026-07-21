@@ -1,0 +1,20 @@
+{
+    "name": "boxfrommars/calendorama",
+    "description": "A small file-backed calendar",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3",
+        "ext-calendar": "*",
+        "twig/twig": "^3.28"
+    },
+    "autoload": {
+        "psr-4": {
+            "Calendorama\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

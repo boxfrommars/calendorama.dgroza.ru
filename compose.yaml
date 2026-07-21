@@ -4,6 +4,7 @@ services:
       context: .
     volumes:
       - .:/var/www/html:ro
+      - /var/www/html/vendor
 
   web:
     image: nginx:1.28-alpine

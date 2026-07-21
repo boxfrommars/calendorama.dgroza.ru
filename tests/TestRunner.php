@@ -57,4 +57,16 @@ final class Assert
     {
         self::true(str_contains($haystack, $needle), $message . ': ' . $needle);
     }
+
+    public static function canonicalHtml(string $html): string
+    {
+        $normalized = str_replace("\r\n", "\n", trim($html));
+        $canonical = preg_replace('/>\s+</u', '><', $normalized);
+
+        if ($canonical === null) {
+            throw new RuntimeException('Could not canonicalize HTML.');
+        }
+
+        return $canonical;
+    }
 }

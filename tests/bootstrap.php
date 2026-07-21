@@ -12,5 +12,5 @@ set_error_handler(
 
 define('PROJECT_ROOT', dirname(__DIR__));
 
-require_once PROJECT_ROOT . '/src/bootstrap.php';
+require_once PROJECT_ROOT . '/vendor/autoload.php';
 require_once __DIR__ . '/TestRunner.php';

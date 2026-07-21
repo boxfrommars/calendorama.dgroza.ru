@@ -7,6 +7,11 @@ $runner->test('index preserves the standalone client and hidden templates', stat
     require PROJECT_ROOT . '/public/index.php';
     $html = ob_get_clean();
 
+    Assert::same(
+        '3d252a5ba8616a4d076b12d2049392368e0c003b7a82a6b5803cd87d85194f47',
+        hash('sha256', Assert::canonicalHtml($html)),
+        'Index canonical HTML changed',
+    );
     Assert::contains('<!doctype html>', strtolower($html), 'HTML5 doctype missing');
     Assert::contains('<script type="module" src="/script.js?i=2"></script>', $html, 'Client module missing');
     Assert::contains('<template id="montheslist-template">', $html, 'Month list template missing');

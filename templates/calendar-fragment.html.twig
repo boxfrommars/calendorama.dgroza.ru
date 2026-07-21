@@ -1,0 +1,6 @@
+<table id="calendar" cellspacing="1" class="{{ calendar.class }}">
+{% for week in calendar.weeks %}
+	<tr>{% for cell in week %}<td class="{{ cell.class }}">{% if cell.post %}<a id="{{ cell.post.anchorId }}" title="{{ cell.post.title }}" class="view_full tooltip goto" href="{{ cell.post.fullUrl }}"><img alt="{{ cell.post.title }}" class="thumb" width="90px" src="{{ cell.post.thumbnailUrl }}" /></a>{% elseif cell.day is not null %}<span>{{ cell.day }}</span>{% else %} {% endif %}</td>{% endfor %}</tr>
+{% endfor %}
+</table>
+	<h2 id="month">{{ navigation.monthName }}&nbsp;&nbsp;<span id="month-nav" class="nav"><a title="{{ navigation.previous.title }}" href="{{ navigation.previous.href }}" class="goto previous tooltip" id="{{ navigation.previous.id }}">&lt;</a><a title="{{ navigation.next.title }}" href="{{ navigation.next.href }}" class="goto next tooltip" id="{{ navigation.next.id }}">&gt;</a></span></h2>

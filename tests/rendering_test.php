@@ -5,18 +5,22 @@ declare(strict_types=1);
 use Calendorama\Calendar\CalendarContent;
 use Calendorama\Calendar\CalendarMonth;
 use Calendorama\Calendar\CalendarRenderer;
+use Calendorama\View\TemplateRenderer;
 
-$renderer = new CalendarRenderer(new CalendarContent(PROJECT_ROOT . '/public/blog'));
+$templates = new TemplateRenderer(PROJECT_ROOT . '/templates');
+$renderer = new CalendarRenderer(new CalendarContent(PROJECT_ROOT . '/public/blog'), $templates);
 
 $runner->test('March 2010 preserves the complete HTML contract', static function () use ($renderer): void {
     $month = new CalendarMonth(3, 2010);
-    $html = $renderer->renderCalendar($month) . $renderer->renderMonthNav($month);
+    $html = $renderer->render($month);
 
     Assert::same(
-        'd44e2d0516fefa7735f33baa014fa650202c7b3051ddf54ed4a5a1563ce542ed',
-        hash('sha256', $html),
-        'March 2010 HTML snapshot changed',
+        'edda0add5890f658f5881e190149fa77b4c15ebf32bd3cca8d02970ff3afd348',
+        hash('sha256', Assert::canonicalHtml($html)),
+        'March 2010 canonical HTML changed',
     );
+    Assert::same(6, substr_count($html, '<tr>'), 'Calendar must have six weeks');
+    Assert::same(42, substr_count($html, '<td class='), 'Calendar must have 42 cells');
     Assert::contains('class="3_2010"', $html, 'Calendar identity missing');
     Assert::contains('blog/3_1_full.jpg', $html, 'Known post missing');
     Assert::contains('id="m2010_2"', $html, 'Previous month missing');
@@ -24,15 +28,15 @@ $runner->test('March 2010 preserves the complete HTML contract', static function
 });
 
 $runner->test('renderer handles leap, empty, and boundary months', static function () use ($renderer): void {
-    $leap = $renderer->renderCalendar(new CalendarMonth(2, 2024));
+    $leap = $renderer->render(new CalendarMonth(2, 2024));
     Assert::contains('<span>29</span>', $leap, 'Leap day missing');
 
-    $empty = $renderer->renderCalendar(new CalendarMonth(10, 2026));
+    $empty = $renderer->render(new CalendarMonth(10, 2026));
     Assert::contains('class="10_2026"', $empty, 'Empty month did not render');
     Assert::true(!str_contains($empty, '<a id="f2026_10_'), 'Unexpected post in empty month');
 
-    $first = $renderer->renderMonthNav(new CalendarMonth(1, 1));
-    $last = $renderer->renderMonthNav(new CalendarMonth(12, 9999));
+    $first = $renderer->render(new CalendarMonth(1, 1));
+    $last = $renderer->render(new CalendarMonth(12, 9999));
     Assert::contains('id="m0_12"', $first, 'Year 1 previous navigation changed');
     Assert::contains('id="m10000_1"', $last, 'Year 9999 next navigation changed');
 });
@@ -45,8 +49,9 @@ $runner->test('renderer escapes file-backed titles at the HTML boundary', static
         file_put_contents($directory . '/3.txt', "1 a\"b<c&d\n");
         touch($directory . '/3_1_thmb.jpg');
 
-        $renderer = new CalendarRenderer(new CalendarContent($directory));
-        $html = $renderer->renderCalendar(new CalendarMonth(3, 2010));
+        $templates = new TemplateRenderer(PROJECT_ROOT . '/templates');
+        $renderer = new CalendarRenderer(new CalendarContent($directory), $templates);
+        $html = $renderer->render(new CalendarMonth(3, 2010));
         Assert::contains('title="a&quot;b&lt;c&amp;d"', $html, 'Title was not escaped');
         Assert::contains('alt="a&quot;b&lt;c&amp;d"', $html, 'Image alt was not escaped');
     } finally {
