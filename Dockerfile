@@ -30,6 +30,7 @@ RUN docker-php-ext-install calendar
 WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
+COPY content ./content
 COPY public ./public
 COPY src ./src
 COPY templates ./templates

@@ -21,7 +21,7 @@ final class ApplicationFactory
         $root = rtrim($projectRoot, '/\\');
         $clock ??= new NativeClock();
         $templates = new TemplateRenderer($root . '/templates');
-        $archive = new CalendarArchive($root . '/public/blog');
+        $archive = new CalendarArchive($root . '/content/archive.json');
         $calendarViews = new CalendarViewFactory($archive, $clock);
         $indexViews = new IndexViewFactory(
             $archive,

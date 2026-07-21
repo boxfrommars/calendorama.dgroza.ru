@@ -44,7 +44,7 @@ final class IndexViewFactoryTest extends TestCase
         $root = dirname(__DIR__);
 
         return new IndexViewFactory(
-            new CalendarArchive($root . '/public/blog'),
+            new CalendarArchive($root . '/content/archive.json'),
             new MockClock($now),
             new AssetUrlGenerator($root . '/public'),
         );

@@ -11,6 +11,8 @@ step. Playwright and Node are used only by the optional browser-test container.
 - `src/` contains the application composition root, HTTP controllers, request
   validation, calendar calculations, content access, typed view models, and
   Twig configuration.
+- `content/archive.json` is the single source of published calendar days and
+  titles. It is shipped with the application but remains outside the web root.
 - `templates/` contains all page and calendar markup as Twig templates.
 - `tests/` contains the PHPUnit, HTTP smoke, and Playwright regression suites.
   PHPStan checks all project PHP at its strictest rule level.
@@ -18,18 +20,21 @@ step. Playwright and Node are used only by the optional browser-test container.
 
 The public entry points create a Symfony HttpFoundation request where needed,
 obtain the explicitly wired application from `ApplicationFactory`, and send a
-response. `CalendarArchive` indexes canonical file-backed posts,
+response. `CalendarArchive` indexes manifest-backed posts,
 `IndexViewFactory` and `CalendarViewFactory` build readonly Twig models, and
 `TemplateRenderer` only renders templates. There is no router,
 dependency-injection container, or framework kernel. The current date comes
 from one PSR-20 clock so server-rendered links and the initial client route
 cannot disagree.
 
-Calendar posts use `blog/{month}_{day}_thmb.jpg` and
-`blog/{month}_{day}_full.jpg`. The optional title for a day is read from the
-line beginning with that day number in `blog/{month}.txt`.
+Calendar posts are declared as `month`, `day`, and `title` records in the
+archive manifest. Their images use `blog/{month}_{day}_thmb.jpg` and
+`blog/{month}_{day}_full.jpg`; paths and monthly totals are derived from the
+manifest without scanning the image directory at runtime.
 Additional image variants such as `3_28_thmb_1.jpg` are retained as files but
 are not counted as separate calendar posts.
+`rss.xml` remains a separate historical export so its publication dates and
+GUID values stay fixed.
 
 ## Local development
 

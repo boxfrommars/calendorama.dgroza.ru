@@ -106,7 +106,7 @@ $unversionedStyle = request('/style.css');
 check(!str_contains($unversionedStyle->headers['cache-control'] ?? '', 'immutable'), 'Unversioned CSS must not be immutable.');
 check(str_contains($unversionedStyle->headers['cache-control'] ?? '', 'no-cache'), 'Unversioned CSS must be revalidated.');
 
-foreach (['/src/', '/templates/', '/vendor/', '/function.php', '/arbitrary.php'] as $path) {
+foreach (['/content/archive.json', '/src/', '/templates/', '/vendor/', '/blog/1.txt', '/function.php', '/arbitrary.php'] as $path) {
     check(request($path)->status === 404, $path . ' did not return 404.');
 }
 

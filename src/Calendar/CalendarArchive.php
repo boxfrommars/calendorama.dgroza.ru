@@ -4,30 +4,26 @@ declare(strict_types=1);
 
 namespace Calendorama\Calendar;
 
+use JsonException;
+use RuntimeException;
+use UnexpectedValueException;
+
 final class CalendarArchive
 {
-    /** @var array<int, array<int, string>> */
-    private array $titles = [];
+    /** @var array<int, array<int, CalendarPost>>|null */
+    private ?array $posts = null;
 
     private ?ArchiveSummary $summary = null;
 
     public function __construct(
-        private readonly string $directory,
+        private readonly string $manifestFile,
         private readonly string $webPath = 'blog',
     ) {
     }
 
     public function post(int $month, int $day): ?CalendarPost
     {
-        if (!is_file($this->filePath($month, $day, 'thmb'))) {
-            return null;
-        }
-
-        return new CalendarPost(
-            $this->title($month, $day),
-            $this->imageUrl($month, $day, 'full'),
-            $this->imageUrl($month, $day, 'thmb'),
-        );
+        return $this->posts()[$month][$day] ?? null;
     }
 
     public function summary(): ArchiveSummary
@@ -36,22 +32,9 @@ final class CalendarArchive
             return $this->summary;
         }
 
-        /** @var array<int, int> $counts */
         $counts = array_fill(1, 12, 0);
-        $pattern = rtrim($this->directory, '/\\') . DIRECTORY_SEPARATOR . '*_thmb.jpg';
-
-        foreach (glob($pattern) ?: [] as $file) {
-            if (preg_match('/^([1-9]|1[0-2])_([1-9]|[12][0-9]|3[01])_thmb\.jpg$/D', basename($file), $match) !== 1) {
-                continue;
-            }
-
-            $month = (int) $match[1];
-            $day = (int) $match[2];
-            if ($day > cal_days_in_month(CAL_GREGORIAN, $month, 2000)) {
-                continue;
-            }
-
-            $counts[$month]++;
+        foreach ($this->posts() as $month => $posts) {
+            $counts[$month] = count($posts);
         }
 
         $months = [];
@@ -62,48 +45,85 @@ final class CalendarArchive
         return $this->summary = new ArchiveSummary($months, array_sum($counts));
     }
 
-    private function title(int $month, int $day): string
+    /** @return array<int, array<int, CalendarPost>> */
+    private function posts(): array
     {
-        if (!array_key_exists($month, $this->titles)) {
-            $this->titles[$month] = $this->loadTitles($month);
+        if ($this->posts !== null) {
+            return $this->posts;
         }
 
-        return $this->titles[$month][$day] ?? 'no subject';
-    }
-
-    /** @return array<int, string> */
-    private function loadTitles(int $month): array
-    {
-        $file = rtrim($this->directory, '/\\') . DIRECTORY_SEPARATOR . $month . '.txt';
-        if (!is_file($file)) {
-            return [];
+        $json = @file_get_contents($this->manifestFile);
+        if ($json === false) {
+            throw new RuntimeException(sprintf('Unable to read archive manifest "%s".', $this->manifestFile));
         }
 
-        $lines = file($file, FILE_IGNORE_NEW_LINES);
-        if ($lines === false) {
-            return [];
+        try {
+            $records = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new UnexpectedValueException(
+                sprintf('Invalid archive manifest "%s": %s', $this->manifestFile, $exception->getMessage()),
+                previous: $exception,
+            );
         }
 
-        $titles = [];
-        foreach ($lines as $line) {
-            $separator = strpos($line, ' ');
-            if ($separator === false) {
-                continue;
+        if (!is_array($records) || !array_is_list($records)) {
+            throw new UnexpectedValueException(
+                sprintf('Invalid archive manifest "%s": expected a JSON array.', $this->manifestFile),
+            );
+        }
+
+        /** @var array<int, array<int, CalendarPost>> $posts */
+        $posts = [];
+        foreach ($records as $index => $record) {
+            if (
+                !is_array($record)
+                || count($record) !== 3
+                || !array_key_exists('month', $record)
+                || !array_key_exists('day', $record)
+                || !array_key_exists('title', $record)
+            ) {
+                $this->invalidRecord($index, 'expected exactly month, day and title fields');
             }
 
-            $day = (int) substr($line, 0, $separator);
-            if ($day >= 1 && $day <= 31) {
-                $titles[$day] = trim(substr($line, $separator + 1));
+            $month = $record['month'];
+            $day = $record['day'];
+            $title = $record['title'];
+
+            if (!is_int($month) || $month < 1 || $month > 12) {
+                $this->invalidRecord($index, 'month must be an integer from 1 to 12');
             }
+            if (
+                !is_int($day)
+                || $day < 1
+                || $day > cal_days_in_month(CAL_GREGORIAN, $month, 2000)
+            ) {
+                $this->invalidRecord($index, 'day must be valid for the recurring calendar month');
+            }
+            if (!is_string($title) || trim($title) === '') {
+                $this->invalidRecord($index, 'title must be a non-empty string');
+            }
+            if (isset($posts[$month][$day])) {
+                $this->invalidRecord($index, sprintf('duplicate date %d-%d', $month, $day));
+            }
+
+            $posts[$month][$day] = new CalendarPost(
+                $title,
+                $this->imageUrl($month, $day, 'full'),
+                $this->imageUrl($month, $day, 'thmb'),
+            );
         }
 
-        return $titles;
+        return $this->posts = $posts;
     }
 
-    private function filePath(int $month, int $day, string $size): string
+    private function invalidRecord(int $index, string $message): never
     {
-        return rtrim($this->directory, '/\\') . DIRECTORY_SEPARATOR
-            . $month . '_' . $day . '_' . $size . '.jpg';
+        throw new UnexpectedValueException(sprintf(
+            'Invalid archive manifest "%s" at record %d: %s.',
+            $this->manifestFile,
+            $index + 1,
+            $message,
+        ));
     }
 
     private function imageUrl(int $month, int $day, string $size): string

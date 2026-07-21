@@ -6,25 +6,28 @@ namespace Calendorama\Tests;
 
 use Calendorama\Calendar\ArchiveMonth;
 use Calendorama\Calendar\CalendarArchive;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use UnexpectedValueException;
 
 final class CalendarArchiveTest extends TestCase
 {
     public function testReturnsCompletePostOrNull(): void
     {
-        $archive = new CalendarArchive(dirname(__DIR__) . '/public/blog');
+        $archive = self::projectArchive();
 
         $post = $archive->post(3, 1);
         self::assertNotNull($post);
-        self::assertNotSame('no subject', $post->title);
+        self::assertSame('настя, кардамон, карнавал, дг: снегопад', $post->title);
         self::assertSame('blog/3_1_full.jpg', $post->fullUrl);
         self::assertSame('blog/3_1_thmb.jpg', $post->thumbnailUrl);
         self::assertNull($archive->post(3, 2));
     }
 
-    public function testBuildsSummaryFromCanonicalThumbnails(): void
+    public function testBuildsSummaryFromManifest(): void
     {
-        $summary = (new CalendarArchive(dirname(__DIR__) . '/public/blog'))->summary();
+        $summary = self::projectArchive()->summary();
 
         self::assertCount(12, $summary->months);
         self::assertSame(53, $summary->postCount);
@@ -34,51 +37,107 @@ final class CalendarArchiveTest extends TestCase
         );
     }
 
-    public function testIgnoresVariantsAndImpossibleDates(): void
+    public function testLoadsManifestOnlyOncePerArchiveInstance(): void
     {
-        $directory = self::temporaryDirectory();
+        $json = json_encode(
+            [['month' => 3, 'day' => 1, 'title' => 'title']],
+            JSON_THROW_ON_ERROR,
+        );
+        $file = self::temporaryManifest($json);
+        $archive = new CalendarArchive($file);
 
         try {
-            touch($directory . '/3_1_thmb.jpg');
-            touch($directory . '/3_1_full.jpg');
-            touch($directory . '/3_1_thmb_1.jpg');
-            touch($directory . '/2_30_thmb.jpg');
-            touch($directory . '/13_1_thmb.jpg');
-            touch($directory . '/3_2_full.jpg');
-
-            $summary = (new CalendarArchive($directory))->summary();
-
-            self::assertSame(1, $summary->postCount);
-            self::assertSame(1, $summary->months[2]->postCount);
+            self::assertNotNull($archive->post(3, 1));
+            self::assertTrue(unlink($file));
+            self::assertSame(1, $archive->summary()->postCount);
         } finally {
-            foreach (glob($directory . '/*') ?: [] as $file) {
-                @unlink($file);
-            }
-            @rmdir($directory);
+            @unlink($file);
         }
     }
 
-    public function testFallsBackToNoSubject(): void
+    public function testRejectsMissingManifest(): void
     {
-        $directory = self::temporaryDirectory();
+        $file = sys_get_temp_dir() . '/missing-calendorama-' . bin2hex(random_bytes(8)) . '.json';
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unable to read archive manifest');
+
+        (new CalendarArchive($file))->summary();
+    }
+
+    public function testRejectsMalformedJson(): void
+    {
+        $file = self::temporaryManifest('{not valid JSON');
 
         try {
-            touch($directory . '/3_1_thmb.jpg');
-            $post = (new CalendarArchive($directory))->post(3, 1);
+            $this->expectException(UnexpectedValueException::class);
+            $this->expectExceptionMessage('Invalid archive manifest');
 
-            self::assertNotNull($post);
-            self::assertSame('no subject', $post->title);
+            (new CalendarArchive($file))->summary();
         } finally {
-            @unlink($directory . '/3_1_thmb.jpg');
-            @rmdir($directory);
+            @unlink($file);
         }
     }
 
-    private static function temporaryDirectory(): string
+    public function testRejectsNonArrayRoot(): void
     {
-        $directory = sys_get_temp_dir() . '/calendorama-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($directory));
+        $file = self::temporaryManifest('{"month": 3}');
 
-        return $directory;
+        try {
+            $this->expectException(UnexpectedValueException::class);
+            $this->expectExceptionMessage('expected a JSON array');
+
+            (new CalendarArchive($file))->summary();
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    /** @param list<mixed> $records */
+    #[DataProvider('invalidRecords')]
+    public function testRejectsInvalidRecords(array $records, string $message): void
+    {
+        $json = json_encode($records, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        $file = self::temporaryManifest($json);
+
+        try {
+            $this->expectException(UnexpectedValueException::class);
+            $this->expectExceptionMessage($message);
+
+            (new CalendarArchive($file))->summary();
+        } finally {
+            @unlink($file);
+        }
+    }
+
+    /** @return iterable<string, array{list<mixed>, string}> */
+    public static function invalidRecords(): iterable
+    {
+        yield 'missing field' => [[['month' => 3, 'day' => 1]], 'record 1: expected exactly'];
+        yield 'unknown field' => [[['month' => 3, 'day' => 1, 'title' => 'title', 'extra' => true]], 'record 1: expected exactly'];
+        yield 'month type' => [[['month' => '3', 'day' => 1, 'title' => 'title']], 'month must be an integer'];
+        yield 'month range' => [[['month' => 13, 'day' => 1, 'title' => 'title']], 'month must be an integer'];
+        yield 'day type' => [[['month' => 3, 'day' => '1', 'title' => 'title']], 'day must be valid'];
+        yield 'impossible date' => [[['month' => 2, 'day' => 30, 'title' => 'title']], 'day must be valid'];
+        yield 'empty title' => [[['month' => 3, 'day' => 1, 'title' => '  ']], 'title must be a non-empty string'];
+        yield 'title type' => [[['month' => 3, 'day' => 1, 'title' => 42]], 'title must be a non-empty string'];
+        yield 'duplicate date' => [[
+            ['month' => 3, 'day' => 1, 'title' => 'first'],
+            ['month' => 3, 'day' => 1, 'title' => 'second'],
+        ], 'record 2: duplicate date 3-1'];
+    }
+
+    private static function projectArchive(): CalendarArchive
+    {
+        return new CalendarArchive(dirname(__DIR__) . '/content/archive.json');
+    }
+
+    private static function temporaryManifest(string $contents): string
+    {
+        $file = tempnam(sys_get_temp_dir(), 'calendorama-');
+        self::assertIsString($file);
+        self::assertNotFalse(file_put_contents($file, $contents));
+
+        return $file;
     }
 }

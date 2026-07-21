@@ -76,13 +76,16 @@ final class CalendarViewFactoryTest extends TestCase
 
     public function testEscapesFileBackedTitleInTwig(): void
     {
-        $directory = sys_get_temp_dir() . '/calendorama-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($directory));
+        $manifest = tempnam(sys_get_temp_dir(), 'calendorama-');
+        self::assertIsString($manifest);
 
         try {
-            file_put_contents($directory . '/3.txt', "1 a\"b<c&d\n");
-            touch($directory . '/3_1_thmb.jpg');
-            $factory = new CalendarViewFactory(new CalendarArchive($directory), new MockClock('2026-07-21'));
+            $json = json_encode(
+                [['month' => 3, 'day' => 1, 'title' => 'a"b<c&d']],
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE,
+            );
+            self::assertNotFalse(file_put_contents($manifest, $json));
+            $factory = new CalendarViewFactory(new CalendarArchive($manifest), new MockClock('2026-07-21'));
             $html = self::templates()->render(
                 'calendar-fragment.html.twig',
                 ['calendar' => $factory->create(new CalendarMonth(3, 2010))],
@@ -92,16 +95,14 @@ final class CalendarViewFactoryTest extends TestCase
             self::assertStringContainsString('alt="a&quot;b&lt;c&amp;d"', $html);
             self::assertStringContainsString('aria-label="1.03.2010 — a&quot;b&lt;c&amp;d"', $html);
         } finally {
-            @unlink($directory . '/3.txt');
-            @unlink($directory . '/3_1_thmb.jpg');
-            @rmdir($directory);
+            @unlink($manifest);
         }
     }
 
     private static function factory(string $now): CalendarViewFactory
     {
         return new CalendarViewFactory(
-            new CalendarArchive(dirname(__DIR__) . '/public/blog'),
+            new CalendarArchive(dirname(__DIR__) . '/content/archive.json'),
             new MockClock($now),
         );
     }
