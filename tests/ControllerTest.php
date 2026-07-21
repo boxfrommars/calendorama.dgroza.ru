@@ -7,6 +7,7 @@ namespace Calendorama\Tests;
 use Calendorama\ApplicationFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -52,8 +53,8 @@ final class ControllerTest extends TestCase
         $monthLinks = $crawler->filter('dialog[data-panel="months"] a[data-calendar-route]');
 
         self::assertCount(12, $monthLinks);
-        self::assertSame('/#d2010_1', $monthLinks->first()->attr('href'));
-        self::assertSame('#d2010_1', $monthLinks->first()->attr('data-calendar-route'));
+        self::assertSame('/#d2026_1', $monthLinks->first()->attr('href'));
+        self::assertSame('#d2026_1', $monthLinks->first()->attr('data-calendar-route'));
         self::assertCount(31, $crawler->filter('.author-entry'));
         self::assertCount(31, $crawler->filter('.author-entry > dt'));
         self::assertCount(31, $crawler->filter('.author-entry > dd'));
@@ -62,6 +63,26 @@ final class ControllerTest extends TestCase
         self::assertCount(0, $crawler->filter('a[id]'));
         self::assertStringNotContainsString('pseudoblock', $crawler->html());
         self::assertStringNotContainsString('montheslist', $crawler->html());
+    }
+
+    #[DataProvider('currentYears')]
+    public function testIndexMonthRoutesUseInjectedCurrentYear(string $now, int $year): void
+    {
+        $crawler = Html::crawler(self::content(self::application($now)->index()));
+        $dialog = $crawler->filter('dialog[data-panel="months"]');
+        $monthLinks = $dialog->filter('a[data-calendar-route]');
+
+        self::assertCount(12, $monthLinks);
+        self::assertSame('/#d' . $year . '_1', $monthLinks->first()->attr('href'));
+        self::assertSame('#d' . $year . '_12', $monthLinks->last()->attr('data-calendar-route'));
+        self::assertStringNotContainsString('d2010_', $dialog->html());
+    }
+
+    /** @return iterable<string, array{string, int}> */
+    public static function currentYears(): iterable
+    {
+        yield 'last moment of 2026' => ['2026-12-31T23:59:59+00:00', 2026];
+        yield 'first moment of 2027' => ['2027-01-01T00:00:00+00:00', 2027];
     }
 
     public function testIndexVisibleTextIsUnchanged(): void
@@ -138,9 +159,9 @@ final class ControllerTest extends TestCase
         yield 'year out of range' => [['month' => '3', 'year' => '10000'], 'POST'];
     }
 
-    private static function application(): \Calendorama\Application
+    private static function application(string $now = '2026-07-21T12:00:00+00:00'): \Calendorama\Application
     {
-        return ApplicationFactory::create(dirname(__DIR__));
+        return ApplicationFactory::create(dirname(__DIR__), new MockClock($now));
     }
 
     private static function content(Response $response): string

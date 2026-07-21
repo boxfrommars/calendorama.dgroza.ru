@@ -35,19 +35,25 @@
 
 	<dialog id="months-dialog" class="panel-dialog month-list-panel" data-panel="months" aria-labelledby="months-dialog-title" tabindex="-1">
 		<h2 id="months-dialog-title" class="visually-hidden">Месяцы</h2>
+		{% set months = [
+			{name: 'January', count: 5},
+			{name: 'February', count: 2},
+			{name: 'March', count: 27},
+			{name: 'April', count: 5},
+			{name: 'May', count: 2},
+			{name: 'June', count: 2},
+			{name: 'July', count: 1},
+			{name: 'August', count: 2},
+			{name: 'September', count: 1},
+			{name: 'October', count: 0},
+			{name: 'November', count: 2},
+			{name: 'December', count: 4},
+		] %}
 		<ul>
-			<li><a href="/#d2010_1" data-calendar-route="#d2010_1" data-tooltip="January">January</a> (5)</li>
-			<li><a href="/#d2010_2" data-calendar-route="#d2010_2" data-tooltip="February">February</a> (2)</li>
-			<li><a href="/#d2010_3" data-calendar-route="#d2010_3" data-tooltip="March">March</a> (27)</li>
-			<li><a href="/#d2010_4" data-calendar-route="#d2010_4" data-tooltip="April">April</a> (5)</li>
-			<li><a href="/#d2010_5" data-calendar-route="#d2010_5" data-tooltip="May">May</a> (2)</li>
-			<li><a href="/#d2010_6" data-calendar-route="#d2010_6" data-tooltip="June">June</a> (2)</li>
-			<li><a href="/#d2010_7" data-calendar-route="#d2010_7" data-tooltip="July">July</a> (1)</li>
-			<li><a href="/#d2010_8" data-calendar-route="#d2010_8" data-tooltip="August">August</a> (2)</li>
-			<li><a href="/#d2010_9" data-calendar-route="#d2010_9" data-tooltip="September">September</a> (1)</li>
-			<li><a href="/#d2010_10" data-calendar-route="#d2010_10" data-tooltip="October">October</a> (0)</li>
-			<li><a href="/#d2010_11" data-calendar-route="#d2010_11" data-tooltip="November">November</a> (2)</li>
-			<li><a href="/#d2010_12" data-calendar-route="#d2010_12" data-tooltip="December">December</a> (4)</li>
+		{% for month in months %}
+			{% set route = '#d' ~ currentYear ~ '_' ~ loop.index %}
+			<li><a href="/{{ route }}" data-calendar-route="{{ route }}" data-tooltip="{{ month.name }}">{{ month.name }}</a> ({{ month.count }})</li>
+		{% endfor %}
 			<li>total (53/365)</li>
 		</ul>
 	</dialog>
