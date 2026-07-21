@@ -114,7 +114,7 @@ h3 {
 	height:75px;
 	overflow:hidden;
 }
-.calendar td {
+.calendar-cell {
 	width:100px;
 	height:75px;
 	vertical-align:middle;
@@ -123,27 +123,27 @@ h3 {
 	overflow:hidden;
 	font-family:Georgia, serif;
 }
-.calendar td.w-p {
+.calendar-cell--number {
 	vertical-align:top;
 	text-align:right;
 	color:#999;
 }
-.calendar td.w-p span {
+.calendar-cell--number span {
 	padding:5px;
 	display:block;
 }
-.calendar .a-m-d {
+.calendar-cell--outside-month {
 	background:#dfdfdf;
 }
-.view_full {
+.calendar-post {
 	display:block;
 	width:90px;
 	height:70px;
 	margin:0 auto;
 	overflow:hidden;
 }
-.view_full:hover,
-.view_full:focus {
+.calendar-post:hover,
+.calendar-post:focus {
 	border:2px solid #5AB300;
 }
 /*tooltip*/
@@ -165,12 +165,11 @@ h3 {
 	right:auto;
 	bottom:auto;
 	border:1px solid #ccc;
-	display:block;
 	margin:0;
 	color:inherit;
 }
 /*footer*/
-.month-heading {
+.month-summary {
 	font-size:3.5em;
 	text-transform:uppercase;
 	padding-top:10px;
@@ -178,10 +177,14 @@ h3 {
 	float:left;
 	font-weight:400;
 }
-.month-nav {
+.month-summary h2,
+.month-navigation {
+	display:inline;
+}
+.month-navigation {
 	letter-spacing:0;
 }
-.month-nav a {
+.month-navigation a {
 	text-decoration:none;
 }
 .site-footer {
@@ -217,8 +220,8 @@ h3 {
 	color:#DFA137;
 }
 
-/* pseudoblocks */
-.pseudoblock {
+/* panels */
+.panel-dialog {
 	position:absolute;
 	top:auto;
 	left:auto;
@@ -231,7 +234,7 @@ h3 {
 	margin:0;
 	color:inherit;
 }
-.pseudoblock p {
+.panel-dialog p {
 	margin-bottom:.8em;
 	line-height:15px;
 }
@@ -273,7 +276,7 @@ h3 {
 	padding-left:10px;
 	padding-right:0;
 }
-.montheslist-panel {
+.month-list-panel {
 	width:110px;
 	line-height:1.6;
 	bottom:auto;

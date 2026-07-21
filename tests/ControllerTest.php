@@ -27,12 +27,14 @@ final class ControllerTest extends TestCase
         self::assertCount(1, $crawler->filter('footer'));
         self::assertCount(3, $crawler->filter('button[type="button"][data-panel-target]'));
         self::assertCount(3, $crawler->filter('dialog[data-panel][data-close-on-click]'));
+        self::assertCount(3, $crawler->filter('dialog.panel-dialog[data-panel]'));
+        self::assertCount(0, $crawler->filter('dialog[hidden]'));
         self::assertCount(1, $crawler->filter('dialog[data-region="post-view"][data-close-on-click] img'));
         self::assertCount(1, $crawler->filter('[data-region="status"][role="status"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="alert"][role="alert"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="tooltip"][role="tooltip"][hidden]'));
-        self::assertSame('/style.css?i=3', $crawler->filter('link[rel="stylesheet"]')->attr('href'));
-        self::assertSame('/script.js?i=5', $crawler->filter('script[type="module"]')->attr('src'));
+        self::assertSame('/style.css?i=4', $crawler->filter('link[rel="stylesheet"]')->attr('href'));
+        self::assertSame('/script.js?i=6', $crawler->filter('script[type="module"]')->attr('src'));
         self::assertCount(1, $crawler->filter('script[src]'));
         self::assertStringNotContainsString('jquery', strtolower($html));
         self::assertStringNotContainsString('history.js', strtolower($html));
@@ -42,7 +44,7 @@ final class ControllerTest extends TestCase
     public function testIndexRoutesAndAuthorMarkupAreExplicit(): void
     {
         $crawler = Html::crawler(self::content(self::application()->index()));
-        $monthLinks = $crawler->filter('dialog[data-panel="montheslist"] a[data-calendar-route]');
+        $monthLinks = $crawler->filter('dialog[data-panel="months"] a[data-calendar-route]');
 
         self::assertCount(12, $monthLinks);
         self::assertSame('/#d2010_1', $monthLinks->first()->attr('href'));
@@ -53,6 +55,8 @@ final class ControllerTest extends TestCase
         self::assertCount(0, $crawler->filter('dl > br'));
         self::assertCount(0, $crawler->filter('.goto, .pseudo, .cl, .cleanable, .tooltip, .permtooltip, .pseudotooltip'));
         self::assertCount(0, $crawler->filter('a[id]'));
+        self::assertStringNotContainsString('pseudoblock', $crawler->html());
+        self::assertStringNotContainsString('montheslist', $crawler->html());
     }
 
     public function testIndexVisibleTextIsUnchanged(): void
@@ -78,11 +82,16 @@ final class ControllerTest extends TestCase
         self::assertCount(42, $crawler->filter('table.calendar > tbody > tr > td'));
         self::assertGreaterThan(0, $crawler->filter('td[aria-hidden="true"]')->count());
         self::assertSame('', $crawler->filter('td[aria-hidden="true"]')->first()->text());
-        self::assertCount(27, $crawler->filter('a.view_full[data-calendar-route]'));
+        self::assertCount(42, $crawler->filter('td.calendar-cell'));
+        self::assertCount(11, $crawler->filter('td.calendar-cell--outside-month'));
+        self::assertCount(4, $crawler->filter('td.calendar-cell--number'));
+        self::assertCount(27, $crawler->filter('a.calendar-post[data-calendar-route]'));
         self::assertSame('blog/3_1_full.jpg', $crawler->filter('a[data-calendar-route="#d2010_3_1"]')->attr('href'));
         self::assertSame('90', $crawler->filter('a[data-calendar-route="#d2010_3_1"] img')->attr('width'));
-        self::assertCount(2, $crawler->filter('.month-nav a[data-calendar-route]'));
-        self::assertCount(0, $crawler->filter('[id], .goto, .tooltip'));
+        self::assertCount(1, $crawler->filter('.month-summary > h2 + nav.month-navigation'));
+        self::assertCount(2, $crawler->filter('.month-navigation a[data-calendar-route]'));
+        self::assertCount(0, $crawler->filter('.month-summary > h2 nav'));
+        self::assertCount(0, $crawler->filter('[id], .goto, .tooltip, .w-p, .a-m-d, .view_full'));
         self::assertStringNotContainsString('cellspacing', $html);
     }
 

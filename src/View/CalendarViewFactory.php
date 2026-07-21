@@ -68,15 +68,11 @@ final readonly class CalendarViewFactory
     private function cell(CalendarMonth $month, int $cellNumber, ?int $today): CalendarCellView
     {
         if ($cellNumber < $month->firstWeekday || $cellNumber >= $month->firstWeekday + $month->daysInMonth) {
-            return new CalendarCellView('a-m-d', null, null);
+            return new CalendarCellView(null, null, false);
         }
 
         $day = $cellNumber - $month->firstWeekday + 1;
         $post = $this->content->post($month->month, $day);
-        $class = $post === null ? 'w-p' : '';
-        if ($day === $today) {
-            $class = trim($class . ' today');
-        }
 
         $postView = $post === null ? null : new CalendarPostView(
             '#d' . $month->year . '_' . $month->month . '_' . $day,
@@ -85,7 +81,7 @@ final readonly class CalendarViewFactory
             $post->thumbnailUrl,
         );
 
-        return new CalendarCellView($class, $day, $postView);
+        return new CalendarCellView($day, $postView, $day === $today);
     }
 
     private function todayIn(CalendarMonth $month): ?int

@@ -26,17 +26,18 @@ final class CalendarViewFactoryTest extends TestCase
         self::assertSame('/#d2010_2', $view->navigation->previous->href);
         self::assertSame('/#d2010_4', $view->navigation->next->href);
         self::assertSame('#d2010_3_1', self::day($view->weeks, 1)->post?->route);
+        self::assertFalse(property_exists(CalendarCellView::class, 'class'));
 
         $html = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $view]);
         self::assertCount(42, Html::crawler($html)->filter('td'));
     }
 
-    public function testUsesInjectedClockForTodayClass(): void
+    public function testUsesInjectedClockForTodayFlag(): void
     {
         $view = self::factory('2010-03-17 12:00:00')->create(new CalendarMonth(3, 2010));
 
-        self::assertSame('today', self::day($view->weeks, 17)->class);
-        self::assertStringNotContainsString('today', self::day($view->weeks, 16)->class);
+        self::assertTrue(self::day($view->weeks, 17)->isToday);
+        self::assertFalse(self::day($view->weeks, 16)->isToday);
 
         $html = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $view]);
         self::assertCount(1, Html::crawler($html)->filter('td[aria-current="date"]'));

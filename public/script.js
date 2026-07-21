@@ -23,8 +23,7 @@ const state = {
     routeVersion: 0,
     tooltipTarget: null,
     panel: null,
-    panelOpener: null,
-    postOpener: null,
+    dialogOpeners: new WeakMap(),
 };
 
 function parseHash(hash) {
@@ -52,39 +51,28 @@ function animate(element, keyframes, duration) {
 }
 
 async function fadeIn(element, duration = FADE_DURATION) {
-    element.hidden = false;
     await animate(element, [{opacity: 0}, {opacity: 1}], duration);
     element.style.opacity = '1';
 }
 
-async function fadeOut(element) {
-    if (element.hidden) return;
-    await animate(element, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
-    element.hidden = true;
-    element.style.opacity = '';
-}
-
 async function openDialog(dialog, opener = null) {
-    dialog.hidden = false;
     if (!dialog.open) dialog.show();
+    if (opener) state.dialogOpeners.set(dialog, opener);
     await animate(dialog, [{opacity: 0}, {opacity: 1}], FADE_DURATION);
     dialog.style.opacity = '1';
     dialog.focus({preventScroll: true});
-    if (dialog === elements.postView) state.postOpener = opener;
 }
 
 async function closeDialog(dialog, restoreFocus = true) {
-    if (!dialog.open && dialog.hidden) return;
+    if (!dialog.open) return;
     await animate(dialog, [{opacity: 1}, {opacity: 0}], FADE_DURATION);
     if (dialog.open) dialog.close();
-    dialog.hidden = true;
     dialog.style.opacity = '';
 
-    const opener = dialog === elements.postView ? state.postOpener : state.panelOpener;
-    if (dialog === elements.postView) state.postOpener = null;
+    const opener = state.dialogOpeners.get(dialog);
+    state.dialogOpeners.delete(dialog);
     if (dialog === state.panel) {
         state.panel = null;
-        state.panelOpener = null;
     }
     if (restoreFocus && opener?.isConnected) opener.focus({preventScroll: true});
 }
@@ -224,8 +212,7 @@ async function openPanel(name, opener) {
     if (!(panel instanceof HTMLDialogElement)) return;
     if (state.panel && state.panel !== panel) await closeDialog(state.panel, false);
     state.panel = panel;
-    state.panelOpener = opener;
-    if (!panel.open) await openDialog(panel);
+    if (!panel.open) await openDialog(panel, opener);
 }
 
 function routeFromAnchor(anchor) {
@@ -309,15 +296,15 @@ document.addEventListener('click', async (event) => {
     }
 });
 
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', async (event) => {
     if (event.key !== 'Escape') return;
     if (elements.postView.open) {
         event.preventDefault();
-        closeDialog(elements.postView);
+        await closeDialog(elements.postView);
         if (state.calendarDate) navigate({...state.calendarDate, day: null});
     } else if (state.panel?.open) {
         event.preventDefault();
-        closeDialog(state.panel);
+        await closeDialog(state.panel);
     }
 });
 

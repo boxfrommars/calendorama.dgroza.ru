@@ -7,9 +7,9 @@ namespace Calendorama\View\Model;
 final readonly class CalendarCellView
 {
     public function __construct(
-        public string $class,
         public ?int $day,
         public ?CalendarPostView $post,
+        public bool $isToday,
     ) {
     }
 }

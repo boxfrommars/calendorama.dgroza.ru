@@ -3,35 +3,103 @@
 <head>
 	<meta charset="utf-8">
 	<title>calendorama!</title>
-	<link rel="stylesheet" href="/style.css?i=3" media="screen">
+	<link rel="stylesheet" href="/style.css?i=4" media="screen">
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link rel="alternate" type="application/rss+xml" title="calendorama feed" href="/rss.xml">
-	<script type="module" src="/script.js?i=5"></script>
+	<script type="module" src="/script.js?i=6"></script>
 </head>
 <body>
-<div class="site-shell" data-region="site">
-	<header class="site-header">
+<div class="site-shell">
+	<header>
 		<h1>calendorama!</h1>
 		<nav class="site-navigation" aria-label="Основная навигация">
 			<ul>
 				<li><a href="/rss.xml" class="rss-link" data-tooltip="подписаться на rss">rss</a></li>
 				<li><button type="button" class="link-button" data-panel-target="authors" data-tooltip="авторы картинок">authors</button></li>
-				<li><button type="button" class="link-button" data-panel-target="montheslist" data-tooltip="перейти к месяцу">monthes</button></li>
+				<li><button type="button" class="link-button" data-panel-target="months" data-tooltip="перейти к месяцу">monthes</button></li>
 			</ul>
 		</nav>
 	</header>
 	<main>
-		<div class="month-region" data-region="month" aria-busy="false"></div>
+		<div data-region="month" aria-busy="false"></div>
 		<p class="status-message loading" data-region="status" role="status" hidden></p>
 		<p class="status-message loading" data-region="alert" role="alert" hidden></p>
-		<dialog class="post-view" data-region="post-view" data-close-on-click aria-label="Полноразмерное изображение" tabindex="-1" hidden>
+		<dialog class="post-view" data-region="post-view" data-close-on-click aria-label="Полноразмерное изображение" tabindex="-1">
 			<img alt="">
 		</dialog>
 	</main>
 	<footer class="site-footer">dmitry groza<br>nadja gimmer<br>in incredible <b><button type="button" class="link-button" data-panel-target="about" data-tooltip="о проекте">calendorama project!</button></b></footer>
 	<!-- надя гиммер, вы прекрасны :–) -->
 
-	{% include 'pseudoblocks.html.twig' %}
+	<dialog class="panel-dialog month-list-panel" data-panel="months" data-close-on-click aria-label="Месяцы" tabindex="-1">
+		<ul>
+			<li><a href="/#d2010_1" data-calendar-route="#d2010_1" data-tooltip="January">January</a> (5)</li>
+			<li><a href="/#d2010_2" data-calendar-route="#d2010_2" data-tooltip="February">February</a> (2)</li>
+			<li><a href="/#d2010_3" data-calendar-route="#d2010_3" data-tooltip="March">March</a> (27)</li>
+			<li><a href="/#d2010_4" data-calendar-route="#d2010_4" data-tooltip="April">April</a> (5)</li>
+			<li><a href="/#d2010_5" data-calendar-route="#d2010_5" data-tooltip="May">May</a> (2)</li>
+			<li><a href="/#d2010_6" data-calendar-route="#d2010_6" data-tooltip="June">June</a> (2)</li>
+			<li><a href="/#d2010_7" data-calendar-route="#d2010_7" data-tooltip="July">July</a> (1)</li>
+			<li><a href="/#d2010_8" data-calendar-route="#d2010_8" data-tooltip="August">August</a> (2)</li>
+			<li><a href="/#d2010_9" data-calendar-route="#d2010_9" data-tooltip="September">September</a> (1)</li>
+			<li><a href="/#d2010_10" data-calendar-route="#d2010_10" data-tooltip="October">October</a> (0)</li>
+			<li><a href="/#d2010_11" data-calendar-route="#d2010_11" data-tooltip="November">November</a> (2)</li>
+			<li><a href="/#d2010_12" data-calendar-route="#d2010_12" data-tooltip="December">December</a> (4)</li>
+			<li>total (53/365)</li>
+		</ul>
+	</dialog>
+
+	<dialog class="panel-dialog about-panel" data-panel="about" data-close-on-click aria-label="О проекте" tabindex="-1">
+		<h3>проект <i>календорама!</i></h3>
+		<p>это простой блог-календарь с&nbsp;картинками-записями.</p>
+		<p><b>идея и&nbsp;дизайн (или его отсутствие):</b> надя гиммер</p>
+		<p><b>реализация и&nbsp;наполнение:</b> ваш покорный слуга</p>
+		<p><b>дата запуска:</b> 17&nbsp;марта 2009</p>
+		<p>boxfrommars@gmail.com</p>
+	</dialog>
+
+	<dialog class="panel-dialog authors-panel" data-panel="authors" data-close-on-click aria-label="Авторы картинок" tabindex="-1">
+		<h3>авторы картинок</h3>
+		<dl class="authors-column">
+			<div class="author-entry"><dt>юра (юрек)</dt><dd><a href="http://vkontakte.ru/id12733421" data-tooltip="Юрий Лебедев">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>кардамон</dt><dd><a href="http://fansales.livejournal.com" data-tooltip="Life Aquatic">livejournal</a></dd></div>
+			<div class="author-entry"><dt>гельветик (жукевич)</dt><dd>так жукевич же сдох!</dd></div>
+			<div class="author-entry"><dt>неизвестный</dt><dd>предпочитает оставаться инкогнито</dd></div>
+			<div class="author-entry"><dt>даша</dt><dd>информация скрыта</dd></div>
+			<div class="author-entry"><dt>карнавал</dt><dd><a href="http://manutd.com" data-tooltip="Manchester United official page">MU</a></dd></div>
+			<div class="author-entry"><dt>настя</dt><dd><a href="http://vkontakte.ru/id29120786" data-tooltip="Monika Gustaffson">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>елисей</dt><dd><a href="http://vkontakte.ru/id834086" data-tooltip="Елисей Радионов">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>хейлик (ройксопп)</dt><dd>о хейлике нам пока ничего не известно</dd></div>
+			<div class="author-entry"><dt>лида пила</dt><dd><a href="http://vkontakte.ru/id13266630" data-tooltip="Лида Пила">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>юля</dt><dd><a href="http://vkontakte.ru/id10731099" data-tooltip="Юлия Мизина">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>калинина-малинина</dt><dd><a href="http://vkontakte.ru/id4871535" data-tooltip="Natasha Kalinina">vkontakte</a><br>&nbsp;</dd></div>
+			<div class="author-entry"><dt>сохина</dt><dd>ключевая фигура</dd></div>
+			<div class="author-entry"><dt>б-ка</dt><dd>сложная персона</dd></div>
+			<div class="author-entry"><dt>дг</dt><dd><a href="http://dgroza.ru" data-tooltip="Дмитрий Гроза-Гудмундсдоттир">dgroza</a></dd></div>
+			<div class="author-entry"><dt>мамке</dt><dd><a href="http://vkontakte.ru/id3579364" data-tooltip="Ольга Мурзина">vkontakte</a></dd></div>
+		</dl>
+		<dl class="authors-column authors-column--middle">
+			<div class="author-entry"><dt>дима (сосед №1)</dt><dd>сосед</dd></div>
+			<div class="author-entry"><dt>ольга николаевна</dt><dd><a href="http://vkontakte.ru/id4506412" data-tooltip="Ольга Николаевна">vkontakte</a><br>&nbsp;</dd></div>
+			<div class="author-entry"><dt>галя</dt><dd>информация отсутствует</dd></div>
+			<div class="author-entry"><dt>поивт (2 курс)</dt><dd><ul>
+				<li>кирилл астахов</li><li>павел башевский</li><li>артём гузенко</li><li>степан иванов</li><li>майн канаш</li><li>малик канаш</li><li>роман кривошей</li><li>влад недбайло</li><li>евгений полушин</li><li>георгий пуляев</li><li>родион слободенюк</li>
+			</ul></dd></div>
+			<div class="author-entry"><dt>андрейка</dt><dd><a href="http://vkontakte.ru/id213490" data-tooltip="Андрей Гроза">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>голимбовски</dt><dd><a href="http://vkontakte.ru/id27131962" data-tooltip="Игорь Голимбовски">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>ярослав</dt><dd>данные подтверждаются</dd></div>
+			<div class="author-entry"><dt>аматери</dt><dd><a href="http://vkontakte.ru/id451707" data-tooltip="Виталий Amatery Апрелков">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>настя апрелкова</dt><dd><a href="http://vkontakte.ru/id1083793" data-tooltip="Анастасия Апрелкова">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>маша</dt><dd>информация отсутствует</dd></div>
+			<div class="author-entry"><dt>сергей</dt><dd>данные подтверждаются</dd></div>
+		</dl>
+		<dl class="authors-column authors-column--last">
+			<div class="author-entry"><dt>люба</dt><dd><a href="http://vkontakte.ru/id7237543" data-tooltip="Любовь Архипова">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>виталий dreamcatcher</dt><dd><a href="http://vkontakte.ru/id3772217" data-tooltip="Виталий Dreamcatcher Федирко">vkontakte</a></dd></div>
+			<div class="author-entry"><dt>вадим-директор</dt><dd>коммерческая (ага-ага) тайна</dd></div>
+			<div class="author-entry"><dt>максим</dt><dd>пребывает инкогнито</dd></div>
+		</dl>
+	</dialog>
 </div>
 <p class="tooltip-box" data-region="tooltip" role="tooltip" hidden></p>
 </body>
