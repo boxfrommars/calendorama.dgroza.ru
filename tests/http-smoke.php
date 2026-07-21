@@ -75,6 +75,7 @@ function versionedAssetUrl(string $html, string $asset): string
 $index = request('/');
 check($index->status === 200, 'Index did not return 200.');
 check(str_contains($index->headers['content-security-policy'] ?? '', "default-src 'self'"), 'Index CSP is missing.');
+check(!isset($index->headers['permissions-policy']), 'Index must not send an unnecessary Permissions-Policy.');
 check(!str_contains($index->headers['cache-control'] ?? '', 'immutable'), 'Index must not be immutable.');
 $styleUrl = versionedAssetUrl($index->body, 'style.css');
 $scriptUrl = versionedAssetUrl($index->body, 'script.js');
@@ -97,10 +98,13 @@ foreach ([$styleUrl, $scriptUrl, '/favicon.ico', '/blog/3_1_thmb.jpg', '/blog/3_
     check($response->status === 200, $asset . ' did not return 200.');
     check(str_contains($response->headers['cache-control'] ?? '', 'immutable'), $asset . ' is not immutable.');
     check(str_contains($response->headers['cache-control'] ?? '', 'max-age=31536000'), $asset . ' max-age is incorrect.');
+    check(str_contains($response->headers['content-security-policy'] ?? '', "default-src 'self'"), $asset . ' CSP is missing.');
+    check(!isset($response->headers['permissions-policy']), $asset . ' must not send an unnecessary Permissions-Policy.');
 }
 
 $unversionedStyle = request('/style.css');
 check(!str_contains($unversionedStyle->headers['cache-control'] ?? '', 'immutable'), 'Unversioned CSS must not be immutable.');
+check(str_contains($unversionedStyle->headers['cache-control'] ?? '', 'no-cache'), 'Unversioned CSS must be revalidated.');
 
 foreach (['/src/', '/templates/', '/vendor/', '/function.php', '/arbitrary.php'] as $path) {
     check(request($path)->status === 404, $path . ' did not return 404.');

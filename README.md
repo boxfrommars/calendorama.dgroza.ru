@@ -96,6 +96,7 @@ host preserves the existing Let's Encrypt certificate and redirects HTTP to
 HTTPS. Twig uses no filesystem cache, so no writable application directory is
 required. CSS and JavaScript URLs contain a content hash. Nginx gives immutable
 cache headers only to versioned assets and archive images, while HTML and RSS
-do not receive immutable caching. The checked-in virtual-host template also
-contains the site Content Security Policy; changing it still requires
-`nginx -t` before a reload.
+do not receive immutable caching. A single URI/version map selects the cache
+policy, and security headers are declared once at the server level. The
+checked-in virtual-host template also contains the site Content Security
+Policy; changing it still requires `nginx -t` before a reload.
