@@ -58,7 +58,7 @@ docker compose up -d
 | Набор | Основные гарантии |
 | --- | --- |
 | PHPUnit domain/content | Параметры, календарная математика, manifest, counts, image pairs, titles. |
-| PHPUnit view/Application | Фиксированный снимок времени, readonly view-model, Twig strict/autoescape, DOM и точные HTTP ошибки. |
+| PHPUnit view/Application | Фиксированный снимок времени, array-shape данные представления, Twig strict/autoescape, DOM и точные HTTP ошибки. |
 | RSS test | Валидность, HTTPS-ссылки и стабильность legacy GUID. |
 | PHPStan | Типы всего PHP-кода на level max без baseline. |
 | HTTP smoke | 200/400/404, CSP, cache headers, закрытые служебные пути. |

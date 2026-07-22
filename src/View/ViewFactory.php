@@ -6,13 +6,15 @@ namespace Calendorama\View;
 
 use Calendorama\Calendar\CalendarArchive;
 use Calendorama\Calendar\CalendarMonth;
-use Calendorama\View\Model\ArchiveMonthView;
-use Calendorama\View\Model\CalendarCellView;
-use Calendorama\View\Model\CalendarPostView;
-use Calendorama\View\Model\CalendarView;
-use Calendorama\View\Model\IndexView;
 use DateTimeImmutable;
 
+/**
+ * @phpstan-type ArchiveMonthView array{name: string, postCount: int, route: string}
+ * @phpstan-type CalendarPostView array{route: string, title: string, ariaLabel: string, fullUrl: string, thumbnailUrl: string}
+ * @phpstan-type CalendarCellView array{day: int|null, post: CalendarPostView|null, isToday: bool}
+ * @phpstan-type CalendarView array{month: int, year: int, weeks: list<list<CalendarCellView>>, monthName: string, previousTitle: string|null, previousRoute: string|null, nextTitle: string|null, nextRoute: string|null}
+ * @phpstan-type IndexView array{initialRoute: string, daysInYear: int, postCount: int, months: list<ArchiveMonthView>, styleUrl: string, scriptUrl: string}
+ */
 final readonly class ViewFactory
 {
     private const WEEKS = 6;
@@ -24,7 +26,8 @@ final readonly class ViewFactory
     ) {
     }
 
-    public function index(): IndexView
+    /** @return IndexView */
+    public function index(): array
     {
         $year = (int) $this->now->format('Y');
         $month = (int) $this->now->format('n');
@@ -33,39 +36,40 @@ final readonly class ViewFactory
 
         foreach ($postCounts as $monthNumber => $postCount) {
             $route = self::monthRoute($year, $monthNumber);
-            $months[] = new ArchiveMonthView(
-                (new CalendarMonth($monthNumber, $year))->name,
-                $postCount,
-                $route,
-            );
+            $months[] = [
+                'name' => (new CalendarMonth($monthNumber, $year))->name,
+                'postCount' => $postCount,
+                'route' => $route,
+            ];
         }
 
-        return new IndexView(
-            self::monthRoute($year, $month),
-            365 + (int) $this->now->format('L'),
-            array_sum($postCounts),
-            $months,
-            $this->assets->versioned('/style.css'),
-            $this->assets->versioned('/script.js'),
-        );
+        return [
+            'initialRoute' => self::monthRoute($year, $month),
+            'daysInYear' => 365 + (int) $this->now->format('L'),
+            'postCount' => array_sum($postCounts),
+            'months' => $months,
+            'styleUrl' => $this->assets->versioned('/style.css'),
+            'scriptUrl' => $this->assets->versioned('/script.js'),
+        ];
     }
 
-    public function calendar(CalendarMonth $month): CalendarView
+    /** @return CalendarView */
+    public function calendar(CalendarMonth $month): array
     {
         $today = $this->todayIn($month);
         $previous = $month->previous();
         $next = $month->next();
 
-        return new CalendarView(
-            $month->month,
-            $month->year,
-            $this->weeks($month, $today),
-            $month->name,
-            $previous === null ? null : $previous->name . ' ' . $previous->year,
-            $previous === null ? null : self::monthRoute($previous->year, $previous->month),
-            $next === null ? null : $next->name . ' ' . $next->year,
-            $next === null ? null : self::monthRoute($next->year, $next->month),
-        );
+        return [
+            'month' => $month->month,
+            'year' => $month->year,
+            'weeks' => $this->weeks($month, $today),
+            'monthName' => $month->name,
+            'previousTitle' => $previous === null ? null : $previous->name . ' ' . $previous->year,
+            'previousRoute' => $previous === null ? null : self::monthRoute($previous->year, $previous->month),
+            'nextTitle' => $next === null ? null : $next->name . ' ' . $next->year,
+            'nextRoute' => $next === null ? null : self::monthRoute($next->year, $next->month),
+        ];
     }
 
     /** @return list<list<CalendarCellView>> */
@@ -86,23 +90,24 @@ final readonly class ViewFactory
         return $weeks;
     }
 
-    private function cell(CalendarMonth $month, int $cellNumber, ?int $today): CalendarCellView
+    /** @return CalendarCellView */
+    private function cell(CalendarMonth $month, int $cellNumber, ?int $today): array
     {
         if ($cellNumber < $month->firstWeekday || $cellNumber >= $month->firstWeekday + $month->daysInMonth) {
-            return new CalendarCellView(null, null, false);
+            return ['day' => null, 'post' => null, 'isToday' => false];
         }
 
         $day = $cellNumber - $month->firstWeekday + 1;
         $title = $this->archive->postTitle($month->month, $day);
-        $postView = $title === null ? null : new CalendarPostView(
-            '#d' . $month->year . '_' . $month->month . '_' . $day,
-            $title,
-            sprintf('%d.%02d.%04d — %s', $day, $month->month, $month->year, $title),
-            self::imageUrl($month->month, $day, 'full'),
-            self::imageUrl($month->month, $day, 'thmb'),
-        );
+        $postView = $title === null ? null : [
+            'route' => '#d' . $month->year . '_' . $month->month . '_' . $day,
+            'title' => $title,
+            'ariaLabel' => sprintf('%d.%02d.%04d — %s', $day, $month->month, $month->year, $title),
+            'fullUrl' => self::imageUrl($month->month, $day, 'full'),
+            'thumbnailUrl' => self::imageUrl($month->month, $day, 'thmb'),
+        ];
 
-        return new CalendarCellView($day, $postView, $day === $today);
+        return ['day' => $day, 'post' => $postView, 'isToday' => $day === $today];
     }
 
     private function todayIn(CalendarMonth $month): ?int

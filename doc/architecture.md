@@ -29,8 +29,7 @@ view-слой. Доменные классы календаря не завис�
 | `public/` | Единственный web-root: два PHP entry point, CSS, JS, RSS и изображения. |
 | `src/Http/` | Строгий разбор входных параметров. |
 | `src/Calendar/` | Календарные вычисления и доступ к manifest архива. |
-| `src/View/` | Единая фабрика view-model, URL ассетов и конфигурация Twig. |
-| `src/View/Model/` | Типизированные readonly-модели, доступные Twig. |
+| `src/View/` | Единая фабрика данных представления, URL ассетов и конфигурация Twig. |
 | `templates/` | Весь серверный HTML: страница и календарный фрагмент. |
 | `content/` | Приватный manifest опубликованных дней. |
 | `tests/` | PHPUnit, HTTP smoke и Playwright-сценарии. |
@@ -61,12 +60,12 @@ Production создаёт один снимок системного време�
 
 1. `public/index.php` загружает `vendor/autoload.php`.
 2. `ApplicationFactory` собирает приложение и фиксирует текущее время.
-3. `Application::index()` получает `IndexView` от `ViewFactory::index()`.
+3. `Application::index()` получает данные представления от `ViewFactory::index()`.
 4. Factory читает counts архива и content hashes CSS/JS.
 5. `TemplateRenderer` рендерит `templates/index.html.twig` с autoescape.
 6. Entry point отправляет `Response` с HTML и UTF-8 content type.
 
-`IndexView` уже содержит готовые маршруты списка месяцев, counts, итог архива,
+Массив представления уже содержит готовые маршруты списка месяцев, counts, итог архива,
 начальный hash-route и versioned asset URLs. Twig не вычисляет бизнес-данные.
 
 ## Поток календарного фрагмента
@@ -89,7 +88,9 @@ Production создаёт один снимок системного време�
 
 ## View-слой
 
-`ViewFactory` строит типизированные readonly-объекты для обоих шаблонов.
+`ViewFactory` строит для обоих шаблонов массивы фиксированной формы. Их контракты описаны
+локальными PHPStan array-shape типами рядом с кодом построения: это сохраняет статическую
+проверку полей без отдельных одноразовых DTO-классов.
 `TemplateRenderer` занимается только Twig и включает:
 
 - `strict_variables=true` — неполная view-model завершает рендер с ошибкой;
