@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>dgroza | calendorama!</title>
+    <link>{{ feed.siteUrl }}</link>
+    <description>incredible blog by nadja gimmer and dmitry groza</description>
+    <language>en-us</language>
+    <pubDate>{{ feed.pubDate }}</pubDate>
+    <atom:link href="{{ feed.selfUrl }}" rel="self" type="application/rss+xml" />
+    <webMaster>boxfrommars@gmail.com  (dmitry groza)</webMaster>
+{% for item in feed.items %}
+    <item>
+      <title>{{ item.title }}</title>
+      <link>{{ item.link }}</link>
+      <description><![CDATA[<img src="{{ item.imageUrl }}" />]]></description>
+      <pubDate>{{ item.pubDate }}</pubDate>
+      <guid>{{ item.guid }}</guid>
+    </item>
+{% endfor %}
+  </channel>
+</rss>

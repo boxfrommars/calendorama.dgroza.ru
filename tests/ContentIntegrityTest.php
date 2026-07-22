@@ -52,6 +52,25 @@ final class ContentIntegrityTest extends TestCase
         );
     }
 
+    public function testMigratedPublicationDatesRemainExact(): void
+    {
+        $records = self::records(dirname(__DIR__) . '/content/archive.json');
+        $lines = array_map(
+            static fn (array $record): string => sprintf(
+                '%d %d %s',
+                $record['month'],
+                $record['day'],
+                $record['publishedAt'],
+            ),
+            $records,
+        );
+
+        self::assertSame(
+            '1f2a6c8b59ca2e51d2cc9fe5225aec85e5e968638e8cb8ca75c4127143236199',
+            hash('sha256', implode("\n", $lines)),
+        );
+    }
+
     public function testAdditionalImageVariantsRemainPairedButAreNotPosts(): void
     {
         $blog = dirname(__DIR__) . '/public/blog';
@@ -99,14 +118,14 @@ final class ContentIntegrityTest extends TestCase
         self::assertSame(53, $count);
     }
 
-    /** @return list<array{month: int, day: int, title: string}> */
+    /** @return list<array{month: int, day: int, title: string, publishedAt: string}> */
     private static function records(string $manifest): array
     {
         $json = file_get_contents($manifest);
         self::assertIsString($json);
 
         $records = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-        /** @var list<array{month: int, day: int, title: string}> $records */
+        /** @var list<array{month: int, day: int, title: string, publishedAt: string}> $records */
 
         return $records;
     }

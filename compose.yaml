@@ -29,6 +29,16 @@ services:
     command: ["composer", "check"]
     profiles: ["test"]
 
+  rss:
+    build:
+      context: .
+      target: test
+    command: ["composer", "rss"]
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    profiles: ["test"]
+
   smoke:
     build:
       context: .

@@ -35,6 +35,7 @@ FROM php-base AS test
 
 COPY --from=vendor-dev /app/vendor ./vendor
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY bin ./bin
 COPY phpstan.neon phpunit.xml ./
 COPY tests ./tests
 

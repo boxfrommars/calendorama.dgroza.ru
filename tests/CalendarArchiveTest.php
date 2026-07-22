@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Calendorama\Tests;
 
 use Calendorama\Calendar\CalendarArchive;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -29,10 +30,29 @@ final class CalendarArchiveTest extends TestCase
         self::assertSame([5, 2, 27, 5, 2, 2, 1, 2, 1, 0, 2, 4], array_values($counts));
     }
 
+    public function testReturnsPostsWithValidatedPublicationDates(): void
+    {
+        $posts = self::projectArchive()->posts();
+
+        self::assertCount(53, $posts);
+        self::assertInstanceOf(DateTimeImmutable::class, $posts[0]['publishedAt']);
+        self::assertSame('2010-01-07T06:00:00Z', $posts[0]['publishedAt']->format('Y-m-d\TH:i:s\Z'));
+
+        $marchTwentyFifth = array_values(array_filter(
+            $posts,
+            static fn (array $post): bool => $post['month'] === 3 && $post['day'] === 25,
+        ));
+        self::assertCount(1, $marchTwentyFifth);
+        self::assertSame(
+            '2009-03-25T06:00:00Z',
+            $marchTwentyFifth[0]['publishedAt']->format('Y-m-d\TH:i:s\Z'),
+        );
+    }
+
     public function testLoadsManifestOnlyOncePerArchiveInstance(): void
     {
         $json = json_encode(
-            [['month' => 3, 'day' => 1, 'title' => 'title']],
+            [self::validRecord()],
             JSON_THROW_ON_ERROR,
         );
         $file = self::temporaryManifest($json);
@@ -105,18 +125,35 @@ final class CalendarArchiveTest extends TestCase
     /** @return iterable<string, array{list<mixed>, string}> */
     public static function invalidRecords(): iterable
     {
-        yield 'missing field' => [[['month' => 3, 'day' => 1]], 'record 1: expected exactly'];
-        yield 'unknown field' => [[['month' => 3, 'day' => 1, 'title' => 'title', 'extra' => true]], 'record 1: expected exactly'];
-        yield 'month type' => [[['month' => '3', 'day' => 1, 'title' => 'title']], 'month must be an integer'];
-        yield 'month range' => [[['month' => 13, 'day' => 1, 'title' => 'title']], 'month must be an integer'];
-        yield 'day type' => [[['month' => 3, 'day' => '1', 'title' => 'title']], 'day must be valid'];
-        yield 'impossible date' => [[['month' => 2, 'day' => 30, 'title' => 'title']], 'day must be valid'];
-        yield 'empty title' => [[['month' => 3, 'day' => 1, 'title' => '  ']], 'title must be a non-empty string'];
-        yield 'title type' => [[['month' => 3, 'day' => 1, 'title' => 42]], 'title must be a non-empty string'];
+        yield 'missing field' => [[['month' => 3, 'day' => 1, 'title' => 'title']], 'record 1: expected exactly'];
+        yield 'unknown field' => [[self::validRecord(['extra' => true])], 'record 1: expected exactly'];
+        yield 'month type' => [[self::validRecord(['month' => '3'])], 'month must be an integer'];
+        yield 'month range' => [[self::validRecord(['month' => 13])], 'month must be an integer'];
+        yield 'day type' => [[self::validRecord(['day' => '1'])], 'day must be valid'];
+        yield 'impossible date' => [[self::validRecord(['month' => 2, 'day' => 30])], 'day must be valid'];
+        yield 'empty title' => [[self::validRecord(['title' => '  '])], 'title must be a non-empty string'];
+        yield 'title type' => [[self::validRecord(['title' => 42])], 'title must be a non-empty string'];
+        yield 'publishedAt type' => [[self::validRecord(['publishedAt' => 42])], 'publishedAt must be a UTC timestamp'];
+        yield 'publishedAt format' => [[self::validRecord(['publishedAt' => '2009-03-01 04:00:00Z'])], 'publishedAt must be a UTC timestamp'];
+        yield 'publishedAt date mismatch' => [[self::validRecord(['publishedAt' => '2009-03-02T04:00:00Z'])], 'publishedAt month and day must match'];
         yield 'duplicate date' => [[
-            ['month' => 3, 'day' => 1, 'title' => 'first'],
-            ['month' => 3, 'day' => 1, 'title' => 'second'],
+            self::validRecord(['title' => 'first']),
+            self::validRecord(['title' => 'second']),
         ], 'record 2: duplicate date 3-1'];
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    private static function validRecord(array $overrides = []): array
+    {
+        return array_replace([
+            'month' => 3,
+            'day' => 1,
+            'title' => 'title',
+            'publishedAt' => '2009-03-01T04:00:00Z',
+        ], $overrides);
     }
 
     private static function projectArchive(): CalendarArchive

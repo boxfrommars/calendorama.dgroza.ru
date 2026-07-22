@@ -109,7 +109,12 @@ final class ViewFactoryTest extends TestCase
 
         try {
             $json = json_encode(
-                [['month' => 3, 'day' => 1, 'title' => 'a"b<c&d']],
+                [[
+                    'month' => 3,
+                    'day' => 1,
+                    'title' => 'a"b<c&d',
+                    'publishedAt' => '2009-03-01T04:00:00Z',
+                ]],
                 JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE,
             );
             self::assertNotFalse(file_put_contents($manifest, $json));

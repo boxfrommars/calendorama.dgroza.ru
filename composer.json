@@ -27,9 +27,12 @@
     "scripts": {
         "analyse": "phpstan analyse --no-progress --memory-limit=512M",
         "check": [
+            "@rss:check",
             "@test",
             "@analyse"
         ],
+        "rss": "@php bin/generate-rss.php",
+        "rss:check": "@php bin/generate-rss.php --check",
         "test": "@php -d error_reporting=E_ALL vendor/bin/phpunit"
     },
     "config": {

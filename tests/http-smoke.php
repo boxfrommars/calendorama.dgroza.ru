@@ -100,6 +100,7 @@ $rss = request('/rss.xml');
 check($rss->status === 200, 'RSS did not return 200.');
 check(str_contains($rss->body, 'https://calendorama.dgroza.ru'), 'RSS HTTPS links are missing.');
 check(!str_contains($rss->headers['cache-control'] ?? '', 'immutable'), 'RSS must not be immutable.');
+check(str_contains($rss->headers['cache-control'] ?? '', 'no-cache'), 'RSS must be revalidated.');
 
 foreach ([$styleUrl, $scriptUrl, '/favicon.ico', '/blog/3_1_thmb.jpg', '/blog/3_1_full.jpg'] as $asset) {
     $response = request($asset);

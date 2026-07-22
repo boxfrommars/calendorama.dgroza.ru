@@ -20,6 +20,7 @@ production-операцией.
 | `vendor-dev` | Runtime и dev dependencies для PHP-проверок. |
 | `runtime` / `php` | PHP 8.3 FPM и production vendor; без дополнительных PHP extensions и Node. |
 | `test` / `tests` | PHPUnit, PHPStan, Composer и исходники тестов. |
+| `rss` | Явно обновляет tracked `public/rss.xml` через writable bind mount. |
 | `web` | Локальный Nginx перед PHP-FPM, с production-подобными ограничениями. |
 | `smoke` | HTTP-матрица против здорового `web`. |
 | `browser-test` / `e2e` | Зафиксированный Playwright с Chromium, Firefox и WebKit; только для тестов. |
@@ -32,6 +33,7 @@ Nginx блокирует smoke/e2e до готовности сайта.
 
 ```shell
 docker compose --profile test build
+docker compose --profile test run --rm rss
 docker compose --profile test run --rm tests
 docker compose --profile test run --rm smoke
 docker compose --profile test run --rm e2e
@@ -39,9 +41,10 @@ docker compose --profile test run --rm tests composer validate --strict
 docker compose --profile test run --rm tests composer audit --locked --no-dev
 ```
 
-`composer check` внутри `tests` запускает PHPUnit с `E_ALL`, затем PHPStan level
-max. PHPUnit настроен завершаться ошибкой при warning, notice, deprecation,
-risky test и других проблемах, которые легко пропустить вручную.
+`composer check` внутри `tests` сначала проверяет актуальность RSS, затем
+запускает PHPUnit с `E_ALL` и PHPStan level max. PHPUnit настроен завершаться
+ошибкой при warning, notice, deprecation, risky test и других проблемах,
+которые легко пропустить вручную.
 
 Для локального просмотра:
 
@@ -57,9 +60,9 @@ docker compose up -d
 
 | Набор | Основные гарантии |
 | --- | --- |
-| PHPUnit domain/content | Параметры, календарная математика, manifest, counts, image pairs, titles. |
+| PHPUnit domain/content | Параметры, календарная математика, manifest, publication dates, counts, image pairs, titles. |
 | PHPUnit view/Application | Фиксированный снимок времени, array-shape данные представления, Twig strict/autoescape, DOM и точные HTTP ошибки. |
-| RSS test | Валидность, HTTPS-ссылки и стабильность legacy GUID. |
+| RSS test | Детерминированная генерация, валидность, порядок, HTTPS-ссылки и стабильность legacy GUID. |
 | PHPStan | Типы всего PHP-кода на level max без baseline. |
 | HTTP smoke | 200/400/404, CSP, cache headers, закрытые служебные пути. |
 | Playwright | Hash/history, native popover/focus, tooltip, viewer, races, errors, reduced motion в трёх движках. |
@@ -97,7 +100,8 @@ CSP соответствует текущей архитектуре: CSS, JS, �
 `public, max-age=31536000, immutable`. Незаверсионированные CSS/JS получают
 `no-cache`, чтобы старый URL всегда revalidate.
 
-Favicon, фоновые изображения и архивные JPG также immutable, поскольку их
+RSS получает `no-cache`, поэтому клиент может хранить файл, но обязан
+revalidate его по ETag/Last-Modified. Favicon, фоновые изображения и архивные JPG также immutable, поскольку их
 имена считаются стабильными для архивного контента. HTML, handler и RSS не
 получают immutable caching. Изменение содержимого immutable-файла без нового
 URL может оставлять старую версию в кеше; для CSS/JS это решает content hash,

@@ -17,6 +17,8 @@ Nginx
                               ViewFactory ──> CalendarArchive
                                      ↓
                               TemplateRenderer ──> Twig
+
+content/archive.json ──> RssGenerator ──> Twig ──> public/rss.xml
 ```
 
 Symfony HttpFoundation используется только как небольшой HTTP-слой, Twig — как
@@ -29,9 +31,11 @@ view-слой. Доменные классы календаря не завис�
 | `public/` | Единственный web-root: два PHP entry point, CSS, JS, RSS и изображения. |
 | `src/Http/` | Строгий разбор входных параметров. |
 | `src/Calendar/` | Календарные вычисления и доступ к manifest архива. |
+| `src/Rss/` | Детерминированная сборка RSS из manifest. |
 | `src/View/` | Единая фабрика данных представления, URL ассетов и конфигурация Twig. |
-| `templates/` | Весь серверный HTML: страница и календарный фрагмент. |
-| `content/` | Приватный manifest опубликованных дней. |
+| `templates/` | Вся генерируемая разметка: HTML страницы, календарный фрагмент и RSS XML. |
+| `content/` | Приватный manifest опубликованных дней, заголовков и исходных дат. |
+| `bin/` | Локальные CLI-команды для воспроизводимых generated-файлов. |
 | `tests/` | PHPUnit, HTTP smoke и Playwright-сценарии. |
 | `docker/` | Локальная Nginx-конфигурация. |
 | `deploy/` | Шаблон production Nginx virtual host. |
@@ -86,6 +90,17 @@ Production создаёт один снимок системного време�
 отсутствующие значения, текст, month вне `1..12` и year вне `1..9999`
 приводят к HTTP 400. POST и другие методы получают HTTP 405 и `Allow: GET`.
 
+## Поток RSS
+
+RSS не генерируется во время HTTP-запроса. `bin/generate-rss.php` загружает
+`CalendarArchive`, передаёт публикации в `RssGenerator` и рендерит
+`templates/rss.xml.twig`. Полученный `public/rss.xml` коммитится и раздаётся
+Nginx как обычный статический файл.
+
+Генератор сортирует записи по исходному `publishedAt`, вычисляет публичные
+ссылки и сохраняет legacy HTTP GUID. `composer rss:check` повторяет рендер в
+памяти и завершается ошибкой, если tracked XML устарел.
+
 ## View-слой
 
 `ViewFactory` строит для обоих шаблонов массивы фиксированной формы. Их контракты описаны
@@ -94,7 +109,7 @@ Production создаёт один снимок системного време�
 `TemplateRenderer` занимается только Twig и включает:
 
 - `strict_variables=true` — неполная view-model завершает рендер с ошибкой;
-- HTML autoescape — текст manifest и атрибуты экранируются на границе HTML;
+- autoescape — текст manifest и атрибуты экранируются на границе HTML/XML;
 - `cache=false` — приложению не нужны writable-каталоги;
 - `use_yield=true` — актуальный режим Twig 3.
 
