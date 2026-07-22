@@ -1,12 +1,9 @@
-/* CSS Reset by Eric Meyer */
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, font, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
+/* Reset only elements used by this page. */
+html, body, div, span,
+h1, h2, h3, p,
+a, img,
+dl, dt, dd, ul, li,
+table, tbody, thead, tr, th, td,
 header, nav, main, footer, dialog, button {
 	margin: 0;
 	padding: 0;
@@ -23,23 +20,16 @@ body {
 	color: black;
 	background: white;
 }
-ol, ul {
+ul {
 	list-style: none;
 }
 table {
 	border-collapse: separate;
 	border-spacing: 0;
 }
-caption, th, td {
+th, td {
 	text-align: left;
 	font-weight: normal;
-}
-blockquote:before, blockquote:after,
-q:before, q:after {
-	content: "";
-}
-blockquote, q {
-	quotes: "" "";
 }
 [hidden] {
 	display: none !important;
@@ -226,8 +216,6 @@ h3 {
 	color:#333;
 	left:0;
 	top:0;
-}
-.loading {
 	background:transparent url(wait.gif) no-repeat 0;
 }
 .site-navigation {
@@ -293,7 +281,6 @@ h3 {
 	clear:left;
 }
 .authors-panel dd {
-	width:100px;
 	padding-left:10px;
 }
 .authors-column {

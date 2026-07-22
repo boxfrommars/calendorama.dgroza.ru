@@ -101,6 +101,12 @@ test('tooltip and image viewer work with mouse and keyboard', async ({page}) => 
     await expect(page).toHaveURL(/#d2010_3$/);
     await expect(page.locator('#post-view-dialog')).not.toHaveAttribute('open', '');
     await expect(post).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/#d2010_3_1$/);
+    await expect(page.locator('#post-view-dialog')).toHaveJSProperty('open', true);
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/#d2010_3$/);
     assertNoErrors();
 });
 

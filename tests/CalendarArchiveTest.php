@@ -12,16 +12,12 @@ use UnexpectedValueException;
 
 final class CalendarArchiveTest extends TestCase
 {
-    public function testReturnsCompletePostOrNull(): void
+    public function testReturnsPostTitleOrNull(): void
     {
         $archive = self::projectArchive();
 
-        $post = $archive->post(3, 1);
-        self::assertNotNull($post);
-        self::assertSame('настя, кардамон, карнавал, дг: снегопад', $post->title);
-        self::assertSame('blog/3_1_full.jpg', $post->fullUrl);
-        self::assertSame('blog/3_1_thmb.jpg', $post->thumbnailUrl);
-        self::assertNull($archive->post(3, 2));
+        self::assertSame('настя, кардамон, карнавал, дг: снегопад', $archive->postTitle(3, 1));
+        self::assertNull($archive->postTitle(3, 2));
     }
 
     public function testBuildsPostCountsFromManifest(): void
@@ -43,7 +39,7 @@ final class CalendarArchiveTest extends TestCase
         $archive = new CalendarArchive($file);
 
         try {
-            self::assertNotNull($archive->post(3, 1));
+            self::assertSame('title', $archive->postTitle(3, 1));
             self::assertTrue(unlink($file));
             self::assertSame(1, array_sum($archive->postCountsByMonth()));
         } finally {

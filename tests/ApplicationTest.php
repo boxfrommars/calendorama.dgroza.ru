@@ -37,6 +37,7 @@ final class ApplicationTest extends TestCase
         self::assertCount(1, $crawler->filter('[data-region="calendar-announcement"][aria-live="polite"][aria-atomic="true"]'));
         self::assertCount(1, $crawler->filter('[data-region="status"][role="status"][hidden]'));
         self::assertCount(1, $crawler->filter('[data-region="alert"][role="alert"][hidden]'));
+        self::assertCount(0, $crawler->filter('.loading'));
         self::assertCount(1, $crawler->filter('[data-region="tooltip"][role="tooltip"][hidden]'));
         self::assertMatchesRegularExpression('~^/style\.css\?v=[a-f0-9]{12}$~D', $crawler->filter('link[rel="stylesheet"]')->attr('href') ?? '');
         self::assertMatchesRegularExpression('~^/script\.js\?v=[a-f0-9]{12}$~D', $crawler->filter('script[type="module"]')->attr('src') ?? '');

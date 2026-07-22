@@ -93,13 +93,13 @@ final readonly class ViewFactory
         }
 
         $day = $cellNumber - $month->firstWeekday + 1;
-        $post = $this->archive->post($month->month, $day);
-        $postView = $post === null ? null : new CalendarPostView(
+        $title = $this->archive->postTitle($month->month, $day);
+        $postView = $title === null ? null : new CalendarPostView(
             '#d' . $month->year . '_' . $month->month . '_' . $day,
-            $post->title,
-            sprintf('%d.%02d.%04d — %s', $day, $month->month, $month->year, $post->title),
-            $post->fullUrl,
-            $post->thumbnailUrl,
+            $title,
+            sprintf('%d.%02d.%04d — %s', $day, $month->month, $month->year, $title),
+            self::imageUrl($month->month, $day, 'full'),
+            self::imageUrl($month->month, $day, 'thmb'),
         );
 
         return new CalendarCellView($day, $postView, $day === $today);
@@ -117,5 +117,10 @@ final readonly class ViewFactory
     private static function monthRoute(int $year, int $month): string
     {
         return '#d' . $year . '_' . $month;
+    }
+
+    private static function imageUrl(int $month, int $day, string $size): string
+    {
+        return 'blog/' . $month . '_' . $day . '_' . $size . '.jpg';
     }
 }

@@ -73,7 +73,7 @@ function hideTooltip() {
     state.tooltipTarget = null;
 }
 
-async function clean() {
+async function resetTransientUi() {
     hidePanels();
     await closePostView(false, false);
     hideInfo();
@@ -107,8 +107,7 @@ async function appendCalendar(html, request) {
         return false;
     }
 
-    hideInfo();
-    await clean();
+    await resetTransientUi();
     if (state.activeRequest !== request || request.signal.aborted) return false;
     elements.month.innerHTML = html;
     const calendar = elements.month.querySelector('.calendar');
@@ -164,19 +163,11 @@ async function loadCalendar(date) {
     }
 }
 
-function prepareFullImage() {
-    Object.assign(elements.postView.style, {height: '1px', width: '1px', overflow: 'hidden', padding: '0'});
-}
-
-async function showFullImage(opener, version) {
+async function openPostView(opener, routeVersion) {
     hidePanels();
-    if (version !== state.routeVersion) return;
+    if (routeVersion !== state.routeVersion) return false;
     Object.assign(elements.postView.style, {height: 'auto', width: 'auto', overflow: 'visible', padding: ''});
     hideInfo();
-    await openPostView(opener);
-}
-
-async function openPostView(opener) {
     const version = ++state.viewerVersion;
     state.viewerOpener = opener;
     if (!elements.postView.open) elements.postView.show();
@@ -222,28 +213,21 @@ async function viewFull(date, version) {
     const opener = elements.month.querySelector(`[data-calendar-route="${route}"]`);
     const source = opener?.getAttribute('href') ?? `/blog/${date.month}_${date.day}_full.jpg`;
     const title = opener?.dataset.tooltip ?? '';
-    prepareFullImage();
+    Object.assign(elements.postView.style, {height: '1px', width: '1px', overflow: 'hidden', padding: '0'});
     elements.postImage.alt = title;
+    elements.postImage.src = source;
 
-    let handled = false;
-    const show = () => {
-        if (handled) return;
-        handled = true;
-        if (version === state.routeVersion) showFullImage(opener, version);
-    };
-    const fail = () => {
-        if (handled) return;
-        handled = true;
+    try {
+        await elements.postImage.decode();
+    } catch {
         if (version === state.routeVersion) {
-            closePostView(false, false);
+            await closePostView(false, false);
             showInfo(INFO.noImage, true);
         }
-    };
+        return;
+    }
 
-    elements.postImage.onload = show;
-    elements.postImage.onerror = fail;
-    elements.postImage.src = source;
-    if (elements.postImage.complete) elements.postImage.naturalWidth > 0 ? show() : fail();
+    if (version === state.routeVersion) await openPostView(opener, version);
 }
 
 async function handleHash() {
@@ -259,7 +243,7 @@ async function handleHash() {
     } else if (monthChanged) {
         await loadCalendar(date);
     } else {
-        await clean();
+        await resetTransientUi();
     }
 }
 

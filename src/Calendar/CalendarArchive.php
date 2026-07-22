@@ -10,36 +10,34 @@ use UnexpectedValueException;
 
 final class CalendarArchive
 {
-    /** @var array<int, array<int, CalendarPost>>|null */
-    private ?array $posts = null;
+    /** @var array<int, array<int, string>>|null */
+    private ?array $titles = null;
 
-    public function __construct(
-        private readonly string $manifestFile,
-        private readonly string $webPath = 'blog',
-    ) {
+    public function __construct(private readonly string $manifestFile)
+    {
     }
 
-    public function post(int $month, int $day): ?CalendarPost
+    public function postTitle(int $month, int $day): ?string
     {
-        return $this->posts()[$month][$day] ?? null;
+        return $this->titles()[$month][$day] ?? null;
     }
 
     /** @return array<int, int> Counts indexed by month 1..12. */
     public function postCountsByMonth(): array
     {
         $counts = array_fill(1, 12, 0);
-        foreach ($this->posts() as $month => $posts) {
-            $counts[$month] = count($posts);
+        foreach ($this->titles() as $month => $titles) {
+            $counts[$month] = count($titles);
         }
 
         return $counts;
     }
 
-    /** @return array<int, array<int, CalendarPost>> */
-    private function posts(): array
+    /** @return array<int, array<int, string>> */
+    private function titles(): array
     {
-        if ($this->posts !== null) {
-            return $this->posts;
+        if ($this->titles !== null) {
+            return $this->titles;
         }
 
         $json = @file_get_contents($this->manifestFile);
@@ -62,8 +60,8 @@ final class CalendarArchive
             );
         }
 
-        /** @var array<int, array<int, CalendarPost>> $posts */
-        $posts = [];
+        /** @var array<int, array<int, string>> $titles */
+        $titles = [];
         foreach ($records as $index => $record) {
             if (
                 !is_array($record)
@@ -92,18 +90,14 @@ final class CalendarArchive
             if (!is_string($title) || trim($title) === '') {
                 $this->invalidRecord($index, 'title must be a non-empty string');
             }
-            if (isset($posts[$month][$day])) {
+            if (isset($titles[$month][$day])) {
                 $this->invalidRecord($index, sprintf('duplicate date %d-%d', $month, $day));
             }
 
-            $posts[$month][$day] = new CalendarPost(
-                $title,
-                $this->imageUrl($month, $day, 'full'),
-                $this->imageUrl($month, $day, 'thmb'),
-            );
+            $titles[$month][$day] = $title;
         }
 
-        return $this->posts = $posts;
+        return $this->titles = $titles;
     }
 
     private function invalidRecord(int $index, string $message): never
@@ -114,10 +108,5 @@ final class CalendarArchive
             $index + 1,
             $message,
         ));
-    }
-
-    private function imageUrl(int $month, int $day, string $size): string
-    {
-        return rtrim($this->webPath, '/') . '/' . $month . '_' . $day . '_' . $size . '.jpg';
     }
 }

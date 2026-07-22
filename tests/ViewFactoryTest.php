@@ -55,6 +55,8 @@ final class ViewFactoryTest extends TestCase
         self::assertNotNull($firstPost);
         self::assertSame('#d2010_3_1', $firstPost->route);
         self::assertStringStartsWith('1.03.2010 — ', $firstPost->ariaLabel);
+        self::assertSame('blog/3_1_full.jpg', $firstPost->fullUrl);
+        self::assertSame('blog/3_1_thmb.jpg', $firstPost->thumbnailUrl);
         self::assertFalse(property_exists(CalendarCellView::class, 'class'));
 
         $html = self::templates()->render('calendar-fragment.html.twig', ['calendar' => $view]);

@@ -6,21 +6,14 @@ namespace Calendorama\View;
 
 use RuntimeException;
 
-final class AssetUrlGenerator
+final readonly class AssetUrlGenerator
 {
-    /** @var array<string, string> */
-    private array $urls = [];
-
-    public function __construct(private readonly string $publicDirectory)
+    public function __construct(private string $publicDirectory)
     {
     }
 
     public function versioned(string $path): string
     {
-        if (isset($this->urls[$path])) {
-            return $this->urls[$path];
-        }
-
         $publicPath = '/' . ltrim($path, '/');
         $file = rtrim($this->publicDirectory, '/\\') . str_replace('/', DIRECTORY_SEPARATOR, $publicPath);
         if (!is_file($file)) {
@@ -32,6 +25,6 @@ final class AssetUrlGenerator
             throw new RuntimeException('Could not hash public asset: ' . $publicPath);
         }
 
-        return $this->urls[$path] = $publicPath . '?v=' . substr($hash, 0, 12);
+        return $publicPath . '?v=' . substr($hash, 0, 12);
     }
 }

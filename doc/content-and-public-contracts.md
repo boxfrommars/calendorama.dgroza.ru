@@ -14,7 +14,7 @@
 ```
 
 `CalendarArchive` лениво читает manifest один раз на экземпляр и индексирует
-записи по `month/day`. Проверяются:
+только заголовки по `month/day`. Проверяются:
 
 - корневой JSON-массив;
 - точный набор полей `month`, `day`, `title`;
@@ -39,9 +39,10 @@ public/blog/{month}_{day}_thmb.jpg
 public/blog/{month}_{day}_full.jpg
 ```
 
-URL вычисляются по соглашению об именах. Production request не сканирует
-директорию и не проверяет файлы: целостность manifest и canonical image pairs в
-обе стороны гарантирует `ContentIntegrityTest` перед выпуском.
+URL вычисляются во view-слое по соглашению об именах. `CalendarArchive` не знает
+о web-путях, а production request не сканирует директорию и не проверяет файлы:
+целостность manifest и canonical image pairs в обе стороны гарантирует
+`ContentIntegrityTest` перед выпуском.
 
 Дополнительные варианты вида `3_28_thmb_1.jpg` и `3_28_full_1.jpg` допустимы,
 если образуют пару. Они остаются доступными статическими файлами, но не создают

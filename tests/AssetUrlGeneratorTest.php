@@ -15,12 +15,13 @@ final class AssetUrlGeneratorTest extends TestCase
         $directory = self::temporaryDirectory();
 
         try {
+            $assets = new AssetUrlGenerator($directory);
             file_put_contents($directory . '/style.css', 'first');
-            $first = (new AssetUrlGenerator($directory))->versioned('/style.css');
+            $first = $assets->versioned('/style.css');
             self::assertSame('/style.css?v=a7937b64b8ca', $first);
 
             file_put_contents($directory . '/style.css', 'second');
-            $second = (new AssetUrlGenerator($directory))->versioned('/style.css');
+            $second = $assets->versioned('/style.css');
             self::assertSame('/style.css?v=16367aacb67a', $second);
             self::assertNotSame($first, $second);
         } finally {
