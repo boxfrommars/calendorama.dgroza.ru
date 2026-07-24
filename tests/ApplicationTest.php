@@ -21,6 +21,7 @@ final class ApplicationTest extends TestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame('text/html; charset=utf-8', $response->headers->get('Content-Type'));
+        self::assertStringContainsString('no-cache', $response->headers->get('Cache-Control') ?? '');
         self::assertCount(1, $crawler->filter('html[lang="ru"]'));
         self::assertCount(1, $crawler->filter('header'));
         self::assertCount(1, $crawler->filter('nav'));
@@ -144,6 +145,14 @@ final class ApplicationTest extends TestCase
         );
     }
 
+    #[DataProvider('unsupportedMethods')]
+    public function testIndexRejectsNonGetMethods(string $method): void
+    {
+        self::assertMethodNotAllowed(
+            self::application()->handle(Request::create('/', $method)),
+        );
+    }
+
     /** @param array<string, mixed> $parameters */
     #[DataProvider('invalidRequests')]
     public function testInvalidCalendarRequestReturnsExactError(array $parameters): void
@@ -174,11 +183,7 @@ final class ApplicationTest extends TestCase
             Request::create('/calendar', $method, ['month' => '3', 'year' => '2010']),
         );
 
-        self::assertSame(Response::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
-        self::assertSame('GET', $response->headers->get('Allow'));
-        self::assertStringContainsString('no-store', $response->headers->get('Cache-Control') ?? '');
-        self::assertSame('text/plain; charset=utf-8', $response->headers->get('Content-Type'));
-        self::assertSame('Method Not Allowed.', self::content($response));
+        self::assertMethodNotAllowed($response);
     }
 
     #[DataProvider('unknownRoutes')]
@@ -224,5 +229,14 @@ final class ApplicationTest extends TestCase
         }
 
         return $content;
+    }
+
+    private static function assertMethodNotAllowed(Response $response): void
+    {
+        self::assertSame(Response::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
+        self::assertSame('GET', $response->headers->get('Allow'));
+        self::assertStringContainsString('no-store', $response->headers->get('Cache-Control') ?? '');
+        self::assertSame('text/plain; charset=utf-8', $response->headers->get('Content-Type'));
+        self::assertSame('Method Not Allowed.', self::content($response));
     }
 }

@@ -23,35 +23,28 @@ final readonly class Application
     public function handle(Request $request): Response
     {
         return match ($request->getPathInfo()) {
-            '/' => $this->index(),
+            '/' => $this->index($request),
             '/calendar' => $this->calendar($request),
-            default => new Response(
-                'Not Found.',
-                Response::HTTP_NOT_FOUND,
-                ['Content-Type' => 'text/plain; charset=utf-8'],
-            ),
+            default => self::notFound(),
         };
     }
 
-    private function index(): Response
+    private function index(Request $request): Response
     {
+        if (!$request->isMethod('GET')) {
+            return self::methodNotAllowed();
+        }
+
         return self::htmlResponse(
             $this->templates->render('index.html.twig', ['view' => $this->views->index()]),
+            headers: ['Cache-Control' => 'no-cache'],
         );
     }
 
     private function calendar(Request $request): Response
     {
         if (!$request->isMethod('GET')) {
-            return new Response(
-                'Method Not Allowed.',
-                Response::HTTP_METHOD_NOT_ALLOWED,
-                [
-                    'Allow' => 'GET',
-                    'Cache-Control' => 'no-store',
-                    'Content-Type' => 'text/plain; charset=utf-8',
-                ],
-            );
+            return self::methodNotAllowed();
         }
 
         try {
@@ -74,6 +67,20 @@ final readonly class Application
         );
     }
 
+    private static function notFound(): Response
+    {
+        return self::textResponse('Not Found.', Response::HTTP_NOT_FOUND);
+    }
+
+    private static function methodNotAllowed(): Response
+    {
+        return self::textResponse(
+            'Method Not Allowed.',
+            Response::HTTP_METHOD_NOT_ALLOWED,
+            ['Allow' => 'GET', 'Cache-Control' => 'no-store'],
+        );
+    }
+
     /** @param array<string, string> $headers */
     private static function htmlResponse(
         string $content,
@@ -84,6 +91,16 @@ final readonly class Application
             $content,
             $status,
             ['Content-Type' => 'text/html; charset=utf-8'] + $headers,
+        );
+    }
+
+    /** @param array<string, string> $headers */
+    private static function textResponse(string $content, int $status, array $headers = []): Response
+    {
+        return new Response(
+            $content,
+            $status,
+            ['Content-Type' => 'text/plain; charset=utf-8'] + $headers,
         );
     }
 }

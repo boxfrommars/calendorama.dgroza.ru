@@ -76,9 +76,16 @@ $index = request('/');
 check($index->status === 200, 'Index did not return 200.');
 check(str_contains($index->headers['content-security-policy'] ?? '', "default-src 'self'"), 'Index CSP is missing.');
 check(!isset($index->headers['permissions-policy']), 'Index must not send an unnecessary Permissions-Policy.');
+check(str_contains($index->headers['cache-control'] ?? '', 'no-cache'), 'Index must be revalidated.');
 check(!str_contains($index->headers['cache-control'] ?? '', 'immutable'), 'Index must not be immutable.');
 $styleUrl = versionedAssetUrl($index->body, 'style.css');
 $scriptUrl = versionedAssetUrl($index->body, 'script.js');
+
+$indexMethodNotAllowed = request('/', 'POST');
+check($indexMethodNotAllowed->status === 405, 'POST index request did not return 405.');
+check(($indexMethodNotAllowed->headers['allow'] ?? '') === 'GET', 'Index Allow header is incorrect.');
+check($indexMethodNotAllowed->body === 'Method Not Allowed.', 'Index method error body is incorrect.');
+check(str_contains($indexMethodNotAllowed->headers['cache-control'] ?? '', 'no-store'), 'Index method error must not be cached.');
 
 $calendar = request('/calendar?month=3&year=2010');
 check($calendar->status === 200, 'Calendar did not return 200.');

@@ -64,7 +64,7 @@ docker compose up -d
 | PHPUnit view/Application | Фиксированный снимок времени, array-shape данные представления, Twig strict/autoescape, DOM и точные HTTP ошибки. |
 | RSS test | Детерминированная генерация, валидность, порядок, HTTPS-ссылки и стабильность legacy GUID. |
 | PHPStan | Типы всего PHP-кода на level max без baseline. |
-| HTTP smoke | 200/400/405/404, единый front controller, CSP, cache headers, закрытые служебные пути. |
+| HTTP smoke | 200/400/405/404, GET-only маршруты, единый front controller, CSP, cache headers, закрытые служебные пути. |
 | Playwright | Hash/history, native popover/focus, tooltip, viewer, races, errors, reduced motion в трёх движках. |
 | Screenshots | Геометрия календаря, about panel и viewer при viewport 908 px. |
 
@@ -102,12 +102,13 @@ CSP соответствует текущей архитектуре: CSS, JS, �
 `public, max-age=31536000, immutable`. Незаверсионированные CSS/JS получают
 `no-cache`, чтобы старый URL всегда revalidate.
 
-RSS получает `no-cache`, поэтому клиент может хранить файл, но обязан
-revalidate его по ETag/Last-Modified. Favicon, фоновые изображения и архивные JPG также immutable, поскольку их
-имена считаются стабильными для архивного контента. HTML, handler и RSS не
-получают immutable caching. Изменение содержимого immutable-файла без нового
-URL может оставлять старую версию в кеше; для CSS/JS это решает content hash,
-а архивное изображение при замене требует отдельного решения о versioning.
+Главная HTML-страница и RSS получают `no-cache`: клиент может хранить ответ, но
+должен revalidate его; RSS использует ETag/Last-Modified. Календарный fragment и
+ошибки метода получают `no-store`. Favicon, фоновые изображения и архивные JPG
+также immutable, поскольку их имена считаются стабильными для архивного
+контента. Изменение содержимого immutable-файла без нового URL может оставлять
+старую версию в кеше; для CSS/JS это решает content hash, а архивное изображение
+при замене требует отдельного решения о versioning.
 
 ## Перед выпуском
 

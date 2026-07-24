@@ -122,6 +122,30 @@ final class CalendarArchiveTest extends TestCase
         }
     }
 
+    public function testValidationErrorIncludesExactManifestAndRecordContext(): void
+    {
+        $json = json_encode(
+            [self::validRecord(['title' => '  '])],
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE,
+        );
+        $file = self::temporaryManifest($json);
+
+        try {
+            (new CalendarArchive($file))->posts();
+            self::fail('Invalid archive record was accepted.');
+        } catch (UnexpectedValueException $exception) {
+            self::assertSame(
+                sprintf(
+                    'Invalid archive manifest "%s" at record 1: title must be a non-empty string.',
+                    $file,
+                ),
+                $exception->getMessage(),
+            );
+        } finally {
+            @unlink($file);
+        }
+    }
+
     /** @return iterable<string, array{list<mixed>, string}> */
     public static function invalidRecords(): iterable
     {

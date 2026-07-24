@@ -57,11 +57,52 @@ final class CalendarArchive
             return $this->posts;
         }
 
+        [$posts, $titles] = $this->buildIndexes(
+            $this->decodeManifest($this->readManifest()),
+        );
+        $this->titles = $titles;
+
+        return $this->posts = $posts;
+    }
+
+    /**
+     * @param list<mixed> $records
+     * @return array{list<ArchivePost>, array<int, array<int, string>>}
+     */
+    private function buildIndexes(array $records): array
+    {
+        /** @var list<ArchivePost> $posts */
+        $posts = [];
+        /** @var array<int, array<int, string>> $titles */
+        $titles = [];
+        foreach ($records as $index => $record) {
+            $post = $this->parseRecord($record, $index);
+            $month = $post['month'];
+            $day = $post['day'];
+            if (isset($titles[$month][$day])) {
+                $this->invalidRecord($index, sprintf('duplicate date %d-%d', $month, $day));
+            }
+
+            $titles[$month][$day] = $post['title'];
+            $posts[] = $post;
+        }
+
+        return [$posts, $titles];
+    }
+
+    private function readManifest(): string
+    {
         $json = @file_get_contents($this->manifestFile);
         if ($json === false) {
             throw new RuntimeException(sprintf('Unable to read archive manifest "%s".', $this->manifestFile));
         }
 
+        return $json;
+    }
+
+    /** @return list<mixed> */
+    private function decodeManifest(string $json): array
+    {
         try {
             $records = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
@@ -77,77 +118,73 @@ final class CalendarArchive
             );
         }
 
-        /** @var list<ArchivePost> $posts */
-        $posts = [];
-        /** @var array<int, array<int, string>> $titles */
-        $titles = [];
-        foreach ($records as $index => $record) {
-            if (
-                !is_array($record)
-                || count($record) !== 4
-                || !array_key_exists('month', $record)
-                || !array_key_exists('day', $record)
-                || !array_key_exists('title', $record)
-                || !array_key_exists('publishedAt', $record)
-            ) {
-                $this->invalidRecord($index, 'expected exactly month, day, title and publishedAt fields');
-            }
+        return $records;
+    }
 
-            $month = $record['month'];
-            $day = $record['day'];
-            $title = $record['title'];
-            $publishedAt = $record['publishedAt'];
-
-            if (!is_int($month) || $month < 1 || $month > 12) {
-                $this->invalidRecord($index, 'month must be an integer from 1 to 12');
-            }
-            if (
-                !is_int($day)
-                || $day < 1
-                || $day > (new CalendarMonth($month, 2000))->daysInMonth
-            ) {
-                $this->invalidRecord($index, 'day must be valid for the recurring calendar month');
-            }
-            if (!is_string($title) || trim($title) === '') {
-                $this->invalidRecord($index, 'title must be a non-empty string');
-            }
-            if (!is_string($publishedAt)) {
-                $this->invalidRecord($index, 'publishedAt must be a UTC timestamp in YYYY-MM-DDTHH:MM:SSZ format');
-            }
-
-            $publishedDate = DateTimeImmutable::createFromFormat(
-                '!Y-m-d\TH:i:s\Z',
-                $publishedAt,
-                new DateTimeZone('UTC'),
-            );
-            if (
-                $publishedDate === false
-                || $publishedDate->format('Y-m-d\TH:i:s\Z') !== $publishedAt
-            ) {
-                $this->invalidRecord($index, 'publishedAt must be a UTC timestamp in YYYY-MM-DDTHH:MM:SSZ format');
-            }
-            if (
-                (int) $publishedDate->format('n') !== $month
-                || (int) $publishedDate->format('j') !== $day
-            ) {
-                $this->invalidRecord($index, 'publishedAt month and day must match the calendar date');
-            }
-            if (isset($titles[$month][$day])) {
-                $this->invalidRecord($index, sprintf('duplicate date %d-%d', $month, $day));
-            }
-
-            $titles[$month][$day] = $title;
-            $posts[] = [
-                'month' => $month,
-                'day' => $day,
-                'title' => $title,
-                'publishedAt' => $publishedDate,
-            ];
+    /** @return ArchivePost */
+    private function parseRecord(mixed $record, int $index): array
+    {
+        if (
+            !is_array($record)
+            || count($record) !== 4
+            || !array_key_exists('month', $record)
+            || !array_key_exists('day', $record)
+            || !array_key_exists('title', $record)
+            || !array_key_exists('publishedAt', $record)
+        ) {
+            $this->invalidRecord($index, 'expected exactly month, day, title and publishedAt fields');
         }
 
-        $this->titles = $titles;
+        $month = $record['month'];
+        $day = $record['day'];
+        $title = $record['title'];
 
-        return $this->posts = $posts;
+        if (!is_int($month) || $month < 1 || $month > 12) {
+            $this->invalidRecord($index, 'month must be an integer from 1 to 12');
+        }
+        if (
+            !is_int($day)
+            || $day < 1
+            || $day > (new CalendarMonth($month, 2000))->daysInMonth
+        ) {
+            $this->invalidRecord($index, 'day must be valid for the recurring calendar month');
+        }
+        if (!is_string($title) || trim($title) === '') {
+            $this->invalidRecord($index, 'title must be a non-empty string');
+        }
+
+        $publishedDate = $this->parsePublishedAt($record['publishedAt'], $index);
+        if (
+            (int) $publishedDate->format('n') !== $month
+            || (int) $publishedDate->format('j') !== $day
+        ) {
+            $this->invalidRecord($index, 'publishedAt month and day must match the calendar date');
+        }
+
+        return [
+            'month' => $month,
+            'day' => $day,
+            'title' => $title,
+            'publishedAt' => $publishedDate,
+        ];
+    }
+
+    private function parsePublishedAt(mixed $value, int $index): DateTimeImmutable
+    {
+        if (!is_string($value)) {
+            $this->invalidRecord($index, 'publishedAt must be a UTC timestamp in YYYY-MM-DDTHH:MM:SSZ format');
+        }
+
+        $date = DateTimeImmutable::createFromFormat(
+            '!Y-m-d\TH:i:s\Z',
+            $value,
+            new DateTimeZone('UTC'),
+        );
+        if ($date === false || $date->format('Y-m-d\TH:i:s\Z') !== $value) {
+            $this->invalidRecord($index, 'publishedAt must be a UTC timestamp in YYYY-MM-DDTHH:MM:SSZ format');
+        }
+
+        return $date;
     }
 
     private function invalidRecord(int $index, string $message): never
