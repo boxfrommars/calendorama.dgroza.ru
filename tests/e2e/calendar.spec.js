@@ -123,7 +123,7 @@ test('a missing full-size image reports an error without opening the viewer', as
 
 test('an obsolete slow request cannot replace the latest calendar', async ({page}) => {
     const assertNoErrors = pageErrors(page);
-    await page.route(/\/handler\.php\?/, async (route) => {
+    await page.route(/\/calendar\?/, async (route) => {
         const parameters = new URL(route.request().url()).searchParams;
         if (parameters.get('month') === '4') {
             await new Promise((resolve) => setTimeout(resolve, 500));
@@ -150,7 +150,7 @@ test('an obsolete slow request cannot replace the latest calendar', async ({page
 test('request errors preserve the old calendar and reduced motion skips animations', async ({page}) => {
     const assertNoErrors = pageErrors(page, [/status of 500/]);
     await page.emulateMedia({reducedMotion: 'reduce'});
-    await page.route(/\/handler\.php\?/, async (route) => {
+    await page.route(/\/calendar\?/, async (route) => {
         const parameters = new URL(route.request().url()).searchParams;
         if (parameters.get('month') === '4') {
             await route.fulfill({status: 500, contentType: 'text/plain', body: 'failure'});

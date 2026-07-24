@@ -64,7 +64,7 @@ docker compose up -d
 | PHPUnit view/Application | Фиксированный снимок времени, array-shape данные представления, Twig strict/autoescape, DOM и точные HTTP ошибки. |
 | RSS test | Детерминированная генерация, валидность, порядок, HTTPS-ссылки и стабильность legacy GUID. |
 | PHPStan | Типы всего PHP-кода на level max без baseline. |
-| HTTP smoke | 200/400/404, CSP, cache headers, закрытые служебные пути. |
+| HTTP smoke | 200/400/405/404, единый front controller, CSP, cache headers, закрытые служебные пути. |
 | Playwright | Hash/history, native popover/focus, tooltip, viewer, races, errors, reduced motion в трёх движках. |
 | Screenshots | Геометрия календаря, about panel и viewer при viewport 908 px. |
 
@@ -82,9 +82,11 @@ baselines находятся рядом с e2e-тестом. Обновлять 
 Обе конфигурации:
 
 - используют `public/` как document root;
-- выполняют только `/index.php` и `/handler.php`;
-- возвращают 404 для других PHP и скрытых файлов;
+- выполняют единственный `public/index.php` только как внутренний front controller;
+- возвращают 404 для всех прямых PHP URL и скрытых файлов;
 - разрешают статические файлы только если они существуют;
+- передают остальные пути front controller, который маршрутизирует только `/`
+  и `/calendar`;
 - отправляют same-origin CSP, `nosniff`, `DENY` для embedding и безопасную
   referrer policy.
 

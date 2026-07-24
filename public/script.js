@@ -140,7 +140,7 @@ async function loadCalendar(date) {
     showInfo(INFO.loading);
 
     try {
-        const url = new URL('/handler.php', window.location.origin);
+        const url = new URL('/calendar', window.location.origin);
         url.search = new URLSearchParams({month: String(date.month), year: String(date.year)});
         const response = await fetch(url, {
             cache: 'no-store',

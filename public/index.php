@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Calendorama\ApplicationFactory;
+use Symfony\Component\HttpFoundation\Request;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-ApplicationFactory::create(dirname(__DIR__))->index()->send();
+$request = Request::createFromGlobals();
+ApplicationFactory::create(dirname(__DIR__))->handle($request)->send();

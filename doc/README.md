@@ -25,8 +25,7 @@ Calendorama — небольшой read-only календарный архив. 
 
 Основные точки входа:
 
-- `public/index.php` создаёт главную страницу;
-- `public/handler.php` принимает месяц и год и возвращает календарный фрагмент;
+- `public/index.php` — единый внутренний front controller для `/` и `/calendar`;
 - `content/archive.json` задаёт опубликованные дни, заголовки и исходные даты;
 - `public/rss.xml` детерминированно генерируется из manifest;
 - `templates/` содержит весь генерируемый HTML;

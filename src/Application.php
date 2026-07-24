@@ -20,14 +20,27 @@ final readonly class Application
     ) {
     }
 
-    public function index(): Response
+    public function handle(Request $request): Response
+    {
+        return match ($request->getPathInfo()) {
+            '/' => $this->index(),
+            '/calendar' => $this->calendar($request),
+            default => new Response(
+                'Not Found.',
+                Response::HTTP_NOT_FOUND,
+                ['Content-Type' => 'text/plain; charset=utf-8'],
+            ),
+        };
+    }
+
+    private function index(): Response
     {
         return self::htmlResponse(
             $this->templates->render('index.html.twig', ['view' => $this->views->index()]),
         );
     }
 
-    public function calendar(Request $request): Response
+    private function calendar(Request $request): Response
     {
         if (!$request->isMethod('GET')) {
             return new Response(

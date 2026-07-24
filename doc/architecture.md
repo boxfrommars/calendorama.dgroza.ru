@@ -3,14 +3,18 @@
 ## Общая модель
 
 Проект остаётся компактным PHP-приложением без framework kernel, роутера и
-DI-контейнера. Nginx разрешает ровно два PHP entry point, поэтому отдельный
-маршрутизатор здесь не добавил бы полезной абстракции. Все зависимости явно
-собираются в `ApplicationFactory`.
+DI-контейнера. Один внутренний front controller и точный `match` двух маршрутов
+в `Application` не требуют отдельного пакета маршрутизации. Все зависимости
+явно собираются в `ApplicationFactory`.
 
 ```text
 Nginx
-  ├─ /, /index.php ──> Application::index()
-  └─ /handler.php ───> Application::calendar(Request)
+  ├─ существующий статический файл ──> напрямую
+  └─ / или /calendar ──> internal public/index.php
+                              ↓
+                         Application::handle(Request)
+                              ├─ / ─────────> index()
+                              └─ /calendar ─> calendar(Request)
                               ├─ CalendarParameters
                               └─ CalendarMonth
                                      ↓
@@ -28,7 +32,7 @@ view-слой. Доменные классы календаря не завис�
 
 | Путь | Назначение |
 | --- | --- |
-| `public/` | Единственный web-root: два PHP entry point, CSS, JS, RSS и изображения. |
+| `public/` | Единственный web-root: внутренний PHP front controller, CSS, JS, RSS и изображения. |
 | `src/Http/` | Строгий разбор входных параметров. |
 | `src/Calendar/` | Календарные вычисления и доступ к manifest архива. |
 | `src/Rss/` | Детерминированная сборка RSS из manifest. |
@@ -62,20 +66,24 @@ Production создаёт один снимок системного време�
 
 ## Поток главной страницы
 
-1. `public/index.php` загружает `vendor/autoload.php`.
-2. `ApplicationFactory` собирает приложение и фиксирует текущее время.
-3. `Application::index()` получает данные представления от `ViewFactory::index()`.
-4. Factory читает counts архива и content hashes CSS/JS.
-5. `TemplateRenderer` рендерит `templates/index.html.twig` с autoescape.
-6. Entry point отправляет `Response` с HTML и UTF-8 content type.
+1. Nginx внутренне передаёт `/` в `public/index.php`.
+2. Front controller загружает Composer, создаёт `Request` из PHP globals и
+   передаёт его в `Application::handle()`.
+3. `Application` выбирает маршрут `/`, а `ApplicationFactory` собирает
+   зависимости и фиксирует текущее время.
+4. `index()` получает данные представления от `ViewFactory::index()`.
+5. Factory читает counts архива и content hashes CSS/JS.
+6. `TemplateRenderer` рендерит `templates/index.html.twig` с autoescape.
+7. Front controller отправляет `Response` с HTML и UTF-8 content type.
 
 Массив представления уже содержит готовые маршруты списка месяцев, counts, итог архива,
 начальный hash-route и versioned asset URLs. Twig не вычисляет бизнес-данные.
 
 ## Поток календарного фрагмента
 
-1. `public/handler.php` создаёт HttpFoundation `Request` из PHP globals.
-2. `Application::calendar()` разрешает только GET и передаёт query-параметры
+1. Nginx передаёт `/calendar` тому же внутреннему `public/index.php`.
+2. `Application::handle()` выбирает календарный маршрут; `calendar()` разрешает
+   только GET и передаёт query-параметры
    `month` и `year` в `CalendarParameters`.
 3. `CalendarMonth` через `DateTimeImmutable` вычисляет дни, первый weekday,
    название и nullable-соседей в пределах годов `1..9999`.
@@ -121,6 +129,7 @@ Nginx как обычный статический файл.
 
 - Некорректный пользовательский ввод — ожидаемая ошибка HTTP 400.
 - Неподдерживаемый HTTP-метод календаря — ожидаемая ошибка HTTP 405.
+- Неизвестный маршрут — текстовый HTTP 404.
 - Отсутствующий, повреждённый или логически неверный manifest — ошибка
   конфигурации/данных. Она не маскируется fallback-заголовком и должна привести
   к HTTP 500 с записью контекста в PHP-FPM log.

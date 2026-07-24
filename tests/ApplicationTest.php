@@ -15,7 +15,7 @@ final class ApplicationTest extends TestCase
 {
     public function testIndexResponseHasSemanticLandmarksAndNativePopovers(): void
     {
-        $response = self::application()->index();
+        $response = self::application()->handle(Request::create('/'));
         $html = self::content($response);
         $crawler = Html::crawler($html);
 
@@ -51,7 +51,7 @@ final class ApplicationTest extends TestCase
 
     public function testIndexRoutesAndAuthorMarkupAreExplicit(): void
     {
-        $crawler = Html::crawler(self::content(self::application()->index()));
+        $crawler = Html::crawler(self::content(self::application()->handle(Request::create('/'))));
         $monthLinks = $crawler->filter('#months-dialog[popover="auto"] a[data-calendar-route]');
 
         self::assertCount(12, $monthLinks);
@@ -70,7 +70,7 @@ final class ApplicationTest extends TestCase
     #[DataProvider('currentDates')]
     public function testIndexUsesInjectedCurrentDate(string $now, int $year, int $month, int $days): void
     {
-        $crawler = Html::crawler(self::content(self::application($now)->index()));
+        $crawler = Html::crawler(self::content(self::application($now)->handle(Request::create('/'))));
         $dialog = $crawler->filter('#months-dialog[popover="auto"]');
         $monthLinks = $dialog->filter('a[data-calendar-route]');
 
@@ -93,14 +93,17 @@ final class ApplicationTest extends TestCase
     {
         self::assertSame(
             'efe1acf7e4a14cc1230b47bf766f42c8db46aebc050503407576b03233c78538',
-            hash('sha256', Html::normalizedText(self::content(self::application()->index()))),
+            hash(
+                'sha256',
+                Html::normalizedText(self::content(self::application()->handle(Request::create('/')))),
+            ),
         );
     }
 
     public function testCalendarResponseHasSemanticDomContract(): void
     {
-        $request = Request::create('/handler.php', 'GET', ['month' => '3', 'year' => '2010']);
-        $response = self::application()->calendar($request);
+        $request = Request::create('/calendar', 'GET', ['month' => '3', 'year' => '2010']);
+        $response = self::application()->handle($request);
         $html = self::content($response);
         $crawler = Html::crawler($html);
 
@@ -131,8 +134,8 @@ final class ApplicationTest extends TestCase
 
     public function testCalendarVisibleTextIsUnchanged(): void
     {
-        $response = self::application()->calendar(
-            Request::create('/handler.php', 'GET', ['month' => '3', 'year' => '2010']),
+        $response = self::application()->handle(
+            Request::create('/calendar', 'GET', ['month' => '3', 'year' => '2010']),
         );
 
         self::assertSame(
@@ -145,8 +148,8 @@ final class ApplicationTest extends TestCase
     #[DataProvider('invalidRequests')]
     public function testInvalidCalendarRequestReturnsExactError(array $parameters): void
     {
-        $request = Request::create('/handler.php', 'GET', $parameters);
-        $response = self::application()->calendar($request);
+        $request = Request::create('/calendar', 'GET', $parameters);
+        $response = self::application()->handle($request);
 
         self::assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
         self::assertSame('text/html; charset=utf-8', $response->headers->get('Content-Type'));
@@ -167,8 +170,8 @@ final class ApplicationTest extends TestCase
     #[DataProvider('unsupportedMethods')]
     public function testCalendarRejectsNonGetMethods(string $method): void
     {
-        $response = self::application()->calendar(
-            Request::create('/handler.php', $method, ['month' => '3', 'year' => '2010']),
+        $response = self::application()->handle(
+            Request::create('/calendar', $method, ['month' => '3', 'year' => '2010']),
         );
 
         self::assertSame(Response::HTTP_METHOD_NOT_ALLOWED, $response->getStatusCode());
@@ -176,6 +179,25 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('no-store', $response->headers->get('Cache-Control') ?? '');
         self::assertSame('text/plain; charset=utf-8', $response->headers->get('Content-Type'));
         self::assertSame('Method Not Allowed.', self::content($response));
+    }
+
+    #[DataProvider('unknownRoutes')]
+    public function testUnknownRoutesReturnPlainTextNotFound(string $path): void
+    {
+        $response = self::application()->handle(Request::create($path));
+
+        self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+        self::assertSame('text/plain; charset=utf-8', $response->headers->get('Content-Type'));
+        self::assertSame('Not Found.', self::content($response));
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function unknownRoutes(): iterable
+    {
+        yield 'removed index URL' => ['/index.php'];
+        yield 'removed handler URL' => ['/handler.php'];
+        yield 'calendar trailing slash' => ['/calendar/'];
+        yield 'unknown route' => ['/missing'];
     }
 
     /** @return iterable<string, array{string}> */

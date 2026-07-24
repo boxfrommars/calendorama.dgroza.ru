@@ -80,19 +80,24 @@ check(!str_contains($index->headers['cache-control'] ?? '', 'immutable'), 'Index
 $styleUrl = versionedAssetUrl($index->body, 'style.css');
 $scriptUrl = versionedAssetUrl($index->body, 'script.js');
 
-$calendar = request('/handler.php?month=3&year=2010');
+$calendar = request('/calendar?month=3&year=2010');
 check($calendar->status === 200, 'Calendar did not return 200.');
 check(str_contains($calendar->body, 'data-month="3"'), 'Calendar response is incorrect.');
 check(str_contains($calendar->headers['cache-control'] ?? '', 'no-store'), 'Calendar must not be cached.');
 
-$invalid = request('/handler.php?month=13&year=2010');
+$invalid = request('/calendar?month=13&year=2010');
 check($invalid->status === 400, 'Invalid calendar request did not return 400.');
 check($invalid->body === 'Invalid calendar date.', 'Invalid calendar error changed.');
 check(str_contains($invalid->headers['cache-control'] ?? '', 'no-store'), 'Invalid calendar response must not be cached.');
 
-$methodNotAllowed = request('/handler.php', 'POST', 'month=3&year=2010');
+$missing = request('/calendar');
+check($missing->status === 400, 'Calendar request without parameters did not return 400.');
+check($missing->body === 'Invalid calendar date.', 'Missing calendar parameter error changed.');
+check(str_contains($missing->headers['cache-control'] ?? '', 'no-store'), 'Missing parameter error must not be cached.');
+
+$methodNotAllowed = request('/calendar', 'POST', 'month=3&year=2010');
 check($methodNotAllowed->status === 405, 'POST calendar request did not return 405.');
-check(($methodNotAllowed->headers['allow'] ?? '') === 'GET', 'Handler Allow header is incorrect.');
+check(($methodNotAllowed->headers['allow'] ?? '') === 'GET', 'Calendar Allow header is incorrect.');
 check($methodNotAllowed->body === 'Method Not Allowed.', 'Method error body is incorrect.');
 check(str_contains($methodNotAllowed->headers['cache-control'] ?? '', 'no-store'), 'Method error must not be cached.');
 
@@ -115,7 +120,7 @@ $unversionedStyle = request('/style.css');
 check(!str_contains($unversionedStyle->headers['cache-control'] ?? '', 'immutable'), 'Unversioned CSS must not be immutable.');
 check(str_contains($unversionedStyle->headers['cache-control'] ?? '', 'no-cache'), 'Unversioned CSS must be revalidated.');
 
-foreach (['/content/archive.json', '/src/', '/templates/', '/vendor/', '/blog/1.txt', '/function.php', '/arbitrary.php'] as $path) {
+foreach (['/index.php', '/handler.php', '/calendar/', '/missing', '/content/archive.json', '/src/', '/templates/', '/vendor/', '/blog/1.txt', '/function.php', '/arbitrary.php'] as $path) {
     check(request($path)->status === 404, $path . ' did not return 404.');
 }
 

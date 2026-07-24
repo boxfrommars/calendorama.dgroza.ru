@@ -92,14 +92,14 @@ URL вычисляются во view-слое по соглашению об и�
 | Endpoint | Метод и вход | Ответ |
 | --- | --- | --- |
 | `/` | GET | Главная HTML-страница, 200. |
-| `/index.php` | GET | Та же главная страница, 200. |
-| `/handler.php` | GET `month=1..12`, `year=1..9999` | HTML `<section>` календаря, 200 и `Cache-Control: no-store`. |
-| `/handler.php` | Нет или некорректные GET-параметры | `Invalid calendar date.`, 400. |
-| `/handler.php` | POST и другие методы | `Method Not Allowed.`, 405 и `Allow: GET`. |
+| `/calendar` | GET `month=1..12`, `year=1..9999` | HTML `<section>` календаря, 200 и `Cache-Control: no-store`. |
+| `/calendar` | Нет или некорректные GET-параметры | `Invalid calendar date.`, 400. |
+| `/calendar` | POST и другие методы | `Method Not Allowed.`, 405 и `Allow: GET`. |
+| `/index.php`, `/handler.php` | Любой | Удалённые прямые PHP URL, 404. |
 | `/rss.xml` | GET | Сгенерированный статический RSS с `Cache-Control: no-cache`. |
 | `/style.css`, `/script.js`, `/favicon.ico`, `/blog/*` | GET | Статические публичные файлы. |
 
-HTML fragment handler сохраняет 6 недель и 42 ячейки даже для коротких
+HTML-фрагмент календаря сохраняет 6 недель и 42 ячейки даже для коротких
 месяцев. На границах year 1 и 9999 соседняя стрелка присутствует только как
 неинтерактивный элемент.
 
@@ -112,9 +112,12 @@ HTML fragment handler сохраняет 6 недель и 42 ячейки да�
 
 - `/content/archive.json`;
 - `/src/`, `/templates/`, `/tests/`, `/vendor/`;
+- прямые `/index.php` и удалённый `/handler.php`;
 - `/function.php` и любой произвольный PHP-файл;
 - удалённые legacy-файлы `/blog/{month}.txt`.
 
-Выполнение PHP разрешено только для `/index.php` и `/handler.php`. Новый PHP
-endpoint требует явного архитектурного решения и изменения allow-list в обеих
-Nginx-конфигурациях и HTTP smoke-тесте.
+Nginx выполняет только внутренний `public/index.php`: прямой HTTP-доступ к
+любому `.php` запрещён. Существующие статические файлы раздаются напрямую, а
+остальные пути передаются front controller, который знает только `/` и
+`/calendar`. Новый динамический маршрут требует явного изменения
+`Application::handle()` и HTTP smoke-теста, но не нового PHP-файла.

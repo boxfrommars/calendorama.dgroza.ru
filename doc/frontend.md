@@ -50,7 +50,7 @@ ID используются для реальных HTML/ARIA-связей, а C
 
 ## Загрузка календаря
 
-Клиент отправляет GET на `/handler.php?month=…&year=…` с `cache: "no-store"`.
+Клиент отправляет GET на `/calendar?month=…&year=…` с `cache: "no-store"`.
 Timeout составляет 30 секунд, предыдущий запрос отменяется через
 `AbortController`.
 
