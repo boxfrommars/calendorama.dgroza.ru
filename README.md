@@ -11,7 +11,12 @@ documentation for:
 - [application architecture](doc/architecture.md);
 - [frontend behavior and DOM contracts](doc/frontend.md);
 - [content and public contracts](doc/content-and-public-contracts.md);
-- [testing and operations](doc/testing-and-operations.md).
+- [testing and operations](doc/testing-and-operations.md);
+- [deployment requirements](DEPLOYMENT.md).
+
+`DEPLOYMENT.md` is the declarative application contract. Production
+infrastructure, deployment execution and server-specific runbooks are outside
+this repository's responsibility and are not duplicated here.
 
 ## Local development
 

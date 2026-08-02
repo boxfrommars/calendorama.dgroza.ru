@@ -42,7 +42,7 @@ view-слой. Доменные классы календаря не завис�
 | `bin/` | Локальные CLI-команды для воспроизводимых generated-файлов. |
 | `tests/` | PHPUnit, HTTP smoke и Playwright-сценарии. |
 | `docker/` | Локальная Nginx-конфигурация. |
-| `deploy/` | Шаблон production Nginx virtual host. |
+| `deploy/` | Переносимый, не готовый к установке пример Nginx-конфигурации для HTTP-контракта приложения. |
 
 Composer загружает namespace `Calendorama\` из `src/`. Ручного списка
 `require_once`, собственного autoloader и runtime discovery сервисов нет.

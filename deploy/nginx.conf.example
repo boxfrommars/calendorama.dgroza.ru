@@ -1,3 +1,17 @@
+# Portable Nginx example for the Calendorama HTTP contract.
+#
+# This file is not ready to install. Materialize these values for the target
+# environment before validation:
+#
+#   __LISTEN__                listen address and port
+#   __SERVER_NAME__           host names accepted by this server block
+#   __PUBLIC_ROOT__           absolute path to the application's public/ directory
+#   __PHP_FASTCGI_UPSTREAM__  FastCGI address or socket selected by the environment
+#
+# TLS termination, certificates, HTTP-to-HTTPS redirects, logging, service
+# management and activation are intentionally outside this example. The
+# resulting configuration must still satisfy DEPLOYMENT.md.
+
 map "$uri:$arg_v" $calendorama_cache_control {
     default "";
     "~^/rss\.xml:" "no-cache";
@@ -7,11 +21,9 @@ map "$uri:$arg_v" $calendorama_cache_control {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-
-    server_name calendorama.dgroza.ru;
-    root /var/www/calendorama/public;
+    listen __LISTEN__;
+    server_name __SERVER_NAME__;
+    root __PUBLIC_ROOT__;
     index index.php;
 
     add_header Cache-Control $calendorama_cache_control;
@@ -20,23 +32,15 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
 
-    ssl_certificate /etc/letsencrypt/live/calendorama.dgroza.ru/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/calendorama.dgroza.ru/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
     location = /index.php {
         internal;
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass __PHP_FASTCGI_UPSTREAM__;
     }
 
     location ~ \.php$ {
         return 404;
-    }
-
-    location ^~ /.well-known/acme-challenge/ {
-        try_files $uri =404;
     }
 
     location ~ /\. {
@@ -46,12 +50,4 @@ server {
     location / {
         try_files $uri $uri/ /index.php$is_args$args;
     }
-}
-
-server {
-    listen 80;
-    listen [::]:80;
-
-    server_name calendorama.dgroza.ru;
-    return 301 https://$host$request_uri;
 }
