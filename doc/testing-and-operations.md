@@ -27,12 +27,13 @@ Nginx блокирует smoke/e2e до готовности сайта.
 
 ```shell
 docker compose --profile test build
-docker compose --profile test run --rm rss
 docker compose --profile test run --rm tests
 docker compose --profile test run --rm smoke
 docker compose --profile test run --rm e2e
 docker compose --profile test run --rm tests composer validate --strict
-docker compose --profile test run --rm tests composer audit --locked --no-dev
+docker compose --profile test run --rm tests composer check-platform-reqs
+docker compose --profile test run --rm tests composer audit --locked
+docker compose --profile test run --rm e2e npm audit
 ```
 
 `composer check` внутри `tests` сначала проверяет актуальность RSS, затем
@@ -49,6 +50,30 @@ docker compose up -d
 По умолчанию сайт доступен на `http://127.0.0.1:8010`; порт меняется переменной
 `CALENDORAMA_PORT`. После работы окружение останавливается командой
 `docker compose down`.
+
+## Обновление зависимостей
+
+Composer lock-файл обновляется на PHP 8.3, чтобы новые версии runtime- и
+dev-зависимостей оставались совместимы с окружением приложения. Аудит
+`composer audit --locked` проверяет оба набора зависимостей; `npm audit`
+проверяет зависимости browser-тестов.
+
+Версия `@playwright/test` в `package.json` и `package-lock.json` должна точно
+совпадать с версией образа `mcr.microsoft.com/playwright` в `Dockerfile`.
+Пакет и образ обновляются вместе: образ содержит соответствующие браузеры и
+их системные зависимости.
+
+После изменения lock-файлов нужно пересобрать образы и пересоздать локальные
+сервисы с новым anonymous volume для `vendor`, затем выполнить полную матрицу:
+
+```shell
+docker compose --profile test build --pull
+docker compose up -d --force-recreate --renew-anon-volumes php web
+```
+
+Генерировать RSS заново при обновлении пакетов не требуется: `composer check`
+проверяет актуальность tracked XML. Изменения screenshot baselines после
+обновления браузеров требуют просмотра отличий по правилам ниже.
 
 ## Что защищают тесты
 

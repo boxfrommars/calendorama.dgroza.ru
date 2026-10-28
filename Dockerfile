@@ -43,7 +43,7 @@ FROM php-base AS runtime
 
 COPY --from=vendor-prod /app/vendor ./vendor
 
-FROM mcr.microsoft.com/playwright:v1.61.1-noble AS browser-test
+FROM mcr.microsoft.com/playwright:v1.64.1-noble AS browser-test
 
 WORKDIR /app
 
